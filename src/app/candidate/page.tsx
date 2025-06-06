@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -18,10 +19,10 @@ import Link from 'next/link';
 
 export default function CandidatePage() {
   const { toast } = useToast();
-  const { addCandidate, jobs, candidates } = useAppContext(); // Use jobs from context for matching
+  const { addCandidate, jobs } = useAppContext(); // Removed candidates from context as it's no longer used for "currentProfile"
 
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
-  const [aiSummary, setAiSummary] = useState<string>('');
+  const [aiSummary, setAiSummary] = useState<string>(''); // Retained for potential future use if summary is displayed before full submission
   const [submittedProfile, setSubmittedProfile] = useState<Candidate | null>(null);
   const [potentialMatches, setPotentialMatches] = useState<Awaited<ReturnType<typeof performMatchmakingAction>>>([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
@@ -38,13 +39,13 @@ export default function CandidatePage() {
 
   const onSubmit: SubmitHandler<CandidateProfileInput> = async (data) => {
     setIsLoadingSummary(true);
-    setAiSummary('');
+    setAiSummary(''); // Clear previous AI summary
     const summaryResult = await summarizeCandidateProfileAction({ profileText: data.experienceSummary });
     setIsLoadingSummary(false);
 
     let finalSummary = data.experienceSummary.substring(0,200) + "..."; // Fallback summary
     if (summaryResult.success && summaryResult.data) {
-      setAiSummary(summaryResult.data);
+      // setAiSummary(summaryResult.data); // This local state isn't directly displayed anymore, but kept if needed
       finalSummary = summaryResult.data;
       toast({ title: 'Profile Summary Generated', description: 'AI has summarized your experience.' });
     } else {
@@ -53,10 +54,10 @@ export default function CandidatePage() {
     
     const newCandidateId = `cand_${Date.now()}`;
     const newCandidate : Candidate = { ...data, id: newCandidateId, aiSummary: finalSummary };
-    addCandidate(newCandidate);
-    setSubmittedProfile(newCandidate);
+    addCandidate(newCandidate); // Adds to global context, but page UI relies on submittedProfile
+    setSubmittedProfile(newCandidate); // This is the key state for displaying "their" profile
     toast({ title: 'Profile Submitted', description: 'Your profile has been successfully submitted.' });
-    form.reset();
+    // form.reset(); // Commented out to allow user to see their submitted data if they want to tweak and resubmit, or clear if desired
 
     // Perform matchmaking
     setIsLoadingMatches(true);
@@ -65,8 +66,6 @@ export default function CandidatePage() {
     setIsLoadingMatches(false);
   };
   
-  const currentProfile = candidates.length > 0 ? candidates[candidates.length-1] : null;
-
 
   return (
     <div className="space-y-8">
@@ -158,8 +157,8 @@ export default function CandidatePage() {
             </CardHeader>
             <CardContent>
               <h4 className="font-semibold mb-1 text-muted-foreground">AI Generated Summary:</h4>
-              {isLoadingSummary && <div className="flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating summary...</div>}
-              {submittedProfile.aiSummary && !isLoadingSummary && <p className="text-sm italic p-3 bg-muted/30 rounded-md border border-secondary">{submittedProfile.aiSummary}</p>}
+              {isLoadingSummary && submittedProfile.id === `cand_${Date.now()}` && <div className="flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating summary...</div>}
+              {submittedProfile.aiSummary && <p className="text-sm italic p-3 bg-muted/30 rounded-md border border-secondary">{submittedProfile.aiSummary}</p>}
               
               <h4 className="font-semibold mt-4 mb-1 text-muted-foreground">Original Experience Summary:</h4>
               <p className="text-sm whitespace-pre-line font-code">{submittedProfile.experienceSummary}</p>
@@ -191,39 +190,9 @@ export default function CandidatePage() {
         </section>
       )}
 
-      {currentProfile && !submittedProfile && (
-         <section id="my-profile-static" className="mt-12">
-           <h2 className="font-headline text-2xl font-bold tracking-tight text-primary-foreground mb-4">
-             Your Current Profile
-           </h2>
-            <Card className="shadow-md bg-card/70">
-                <CardHeader>
-                    <CardTitle className="font-headline text-lg">{currentProfile.fullName}</CardTitle>
-                    <CardDescription className="font-code text-sm">Skills: {currentProfile.skills} | Location: {currentProfile.locationPreference}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <h4 className="font-semibold mb-1 text-muted-foreground">AI Generated Summary:</h4>
-                    <p className="text-sm italic p-3 bg-muted/30 rounded-md border border-secondary">{currentProfile.aiSummary || "N/A"}</p>
-                </CardContent>
-                <CardFooter>
-                    <Button variant="outline" size="sm" onClick={() => {
-                        setSubmittedProfile(currentProfile);
-                        // Re-fetch matches for this profile
-                        async function fetchData() {
-                            setIsLoadingMatches(true);
-                            const matches = await performMatchmakingAction(currentProfile!, jobs);
-                            setPotentialMatches(matches);
-                            setIsLoadingMatches(false);
-                        }
-                        fetchData();
-                        window.scrollTo({ top: document.getElementById(`profile-${currentProfile!.id}`)?.offsetTop || 0, behavior: 'smooth' });
-                    }}>
-                        View Details & Job Matches
-                    </Button>
-                </CardFooter>
-            </Card>
-         </section>
-      )}
+      {/* Removed the section that displayed "currentProfile" based on the last global candidate */}
+      {/* This ensures candidates only see the profile they submitted in the current session */}
+
     </div>
   );
 }
