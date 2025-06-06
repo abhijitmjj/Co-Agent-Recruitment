@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -7,18 +8,20 @@ import { JobDescriptionSchema, type JobDescriptionInput } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label'; // Keep if used, but FormLabel is preferred
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { getSuggestedJobTitlesAction, generateSEOKeywordsAction, performMatchmakingAction, type Candidate, type Job } from '@/lib/actions';
-import { Briefcase, Lightbulb, Search, Sparkles, UserCheck, Loader2 } from 'lucide-react';
+import { Briefcase, Lightbulb, Search, Sparkles, UserCheck, Loader2, Eye } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
 import Link from 'next/link';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function CompanyPage() {
   const { toast } = useToast();
-  const { addJob, candidates, jobs } = useAppContext(); // Use candidates from context for matching
+  const { addJob, candidates, jobs, getCandidateById } = useAppContext();
   
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
@@ -27,6 +30,9 @@ export default function CompanyPage() {
   const [isLoadingSeo, setIsLoadingSeo] = useState(false);
   const [potentialMatches, setPotentialMatches] = useState<Awaited<ReturnType<typeof performMatchmakingAction>>>([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
+
+  const [selectedCandidateDetail, setSelectedCandidateDetail] = useState<Candidate | null>(null);
+  const [isCandidateDetailModalOpen, setIsCandidateDetailModalOpen] = useState(false);
 
   const form = useForm<JobDescriptionInput>({
     resolver: zodResolver(JobDescriptionSchema),
@@ -57,20 +63,20 @@ export default function CompanyPage() {
 
   const onSubmit: SubmitHandler<JobDescriptionInput> = async (data) => {
     const newJobId = `job_${Date.now()}`;
-    const newJob: Job = { ...data, id: newJobId, companyName: "Your Company" };
+    const newJob: Job = { ...data, id: newJobId, companyName: "Your Company" }; // Assuming a default company name
     addJob(newJob);
-    setSubmittedJob(newJob);
+    setSubmittedJob(newJob); // Set this to display the newly submitted job's details and matches
     toast({ title: 'Job Submitted', description: 'Your job description has been successfully submitted.' });
     form.reset();
-    setSuggestedTitles([]);
+    setSuggestedTitles([]); // Clear suggestions after submission
 
     // Generate SEO Keywords
     setIsLoadingSeo(true);
     const seoResult = await generateSEOKeywordsAction({
       jobTitle: data.jobTitle,
       jobDescription: data.responsibilities,
-      candidateSkills: [], // For MVP, we pass empty. Could be enriched later.
-      candidateExperience: '', // For MVP, we pass empty.
+      candidateSkills: [], 
+      candidateExperience: '', 
     });
     setIsLoadingSeo(false);
     if (seoResult.success && seoResult.data) {
@@ -79,7 +85,7 @@ export default function CompanyPage() {
       toast({ title: 'SEO Keywords Error', description: seoResult.error || 'Failed to generate SEO keywords.', variant: 'destructive' });
     }
 
-    // Perform matchmaking
+    // Perform matchmaking for the new job
     setIsLoadingMatches(true);
     const matches = await performMatchmakingAction(newJob, candidates);
     setPotentialMatches(matches);
@@ -88,6 +94,15 @@ export default function CompanyPage() {
   
   const currentJobs = useMemo(() => jobs.filter(job => job.companyName === "Your Company"), [jobs]);
 
+  const handleViewCandidateProfile = (candidateId: string) => {
+    const candidate = getCandidateById(candidateId);
+    if (candidate) {
+      setSelectedCandidateDetail(candidate);
+      setIsCandidateDetailModalOpen(true);
+    } else {
+      toast({ title: 'Error', description: 'Candidate details not found.', variant: 'destructive' });
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -174,12 +189,12 @@ export default function CompanyPage() {
       {submittedJob && (
         <section id="job-details" className="mt-12">
            <h2 className="font-headline text-2xl font-bold tracking-tight text-primary-foreground mb-4 flex items-center">
-            <UserCheck className="mr-3 h-7 w-7 text-accent" /> Recently Submitted Job & Matches
+            <UserCheck className="mr-3 h-7 w-7 text-accent" /> Job Details & Candidate Matches
           </h2>
           <Card className="shadow-lg bg-card/80 border-primary/30">
             <CardHeader>
               <CardTitle className="font-headline text-xl">{submittedJob.jobTitle}</CardTitle>
-              <CardDescription className="font-code text-sm">Skills: {submittedJob.requiredSkills}</CardDescription>
+              <CardDescription className="font-code text-sm">Required Skills: {submittedJob.requiredSkills}</CardDescription>
             </CardHeader>
             <CardContent>
               <h4 className="font-semibold mb-1 text-muted-foreground">Responsibilities:</h4>
@@ -200,7 +215,7 @@ export default function CompanyPage() {
              <CardFooter className="flex flex-col items-start">
                 <h3 className="font-headline text-lg font-semibold mb-3 text-primary-foreground">Potential Candidate Matches:</h3>
                 {isLoadingMatches && <div className="flex items-center w-full"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Searching for candidates...</div>}
-                {!isLoadingMatches && potentialMatches.length === 0 && <p className="text-muted-foreground">No candidates found yet, or still searching. Try submitting a candidate profile!</p>}
+                {!isLoadingMatches && potentialMatches.length === 0 && <p className="text-muted-foreground">No candidates found yet for this job. Try submitting a candidate profile or broadening job criteria.</p>}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                 {potentialMatches.map(match => (
                     <Card key={match.id} className="bg-background/70 hover:shadow-accent/20 transition-shadow">
@@ -212,8 +227,8 @@ export default function CompanyPage() {
                         <p className="text-xs text-muted-foreground line-clamp-3">{match.details}</p>
                     </CardContent>
                     <CardFooter>
-                       <Button variant="link" size="sm" className="text-accent p-0 h-auto" asChild>
-                            <Link href={`/candidate/#profile-${match.id}`}>View Full Profile (mock)</Link>
+                       <Button variant="link" size="sm" className="text-accent p-0 h-auto" onClick={() => handleViewCandidateProfile(match.id)}>
+                            <Eye className="mr-1 h-4 w-4" /> View Full Profile
                         </Button>
                     </CardFooter>
                     </Card>
@@ -242,19 +257,25 @@ export default function CompanyPage() {
                     <Button variant="outline" size="sm" onClick={() => {
                         setSubmittedJob(job);
                         // Re-fetch matches and SEO for this job
-                        async function fetchData() {
+                        async function fetchDataForJob() {
                             setIsLoadingSeo(true);
                             const seoResult = await generateSEOKeywordsAction({ jobTitle: job.jobTitle, jobDescription: job.responsibilities, candidateSkills: [], candidateExperience: '' });
-                            if (seoResult.success) setSeoKeywords(seoResult.data || []);
+                            if (seoResult.success && seoResult.data) setSeoKeywords(seoResult.data); else setSeoKeywords([]);
                             setIsLoadingSeo(false);
 
                             setIsLoadingMatches(true);
-                            const matches = await performMatchmakingAction(job, candidates);
-                            setPotentialMatches(matches);
+                            const jobMatches = await performMatchmakingAction(job, candidates);
+                            setPotentialMatches(jobMatches);
                             setIsLoadingMatches(false);
                         }
-                        fetchData();
-                        window.scrollTo({ top: document.getElementById('job-details')?.offsetTop || 0, behavior: 'smooth' });
+                        fetchDataForJob();
+                        // Scroll to the job details section
+                        const jobDetailsElement = document.getElementById('job-details');
+                        if (jobDetailsElement) {
+                            jobDetailsElement.scrollIntoView({ behavior: 'smooth' });
+                        } else { // Fallback for older browsers or if ID isn't found immediately
+                           window.scrollTo({ top: (document.getElementById('submit-job')?.offsetHeight || 0) + 100, behavior: 'smooth' });
+                        }
                     }}>
                         View Details & Matches
                     </Button>
@@ -264,11 +285,45 @@ export default function CompanyPage() {
            </div>
          </section>
       )}
+
+      {selectedCandidateDetail && (
+        <Dialog open={isCandidateDetailModalOpen} onOpenChange={setIsCandidateDetailModalOpen}>
+          <DialogContent className="sm:max-w-[600px] bg-card text-card-foreground">
+            <DialogHeader>
+              <DialogTitle className="font-headline text-2xl text-accent">{selectedCandidateDetail.fullName}</DialogTitle>
+              <DialogDescription>
+                Location Preference: {selectedCandidateDetail.locationPreference}
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] p-1 pr-4">
+              <div className="space-y-4 py-4">
+                <div>
+                  <h4 className="font-semibold text-primary-foreground mb-1">Skills:</h4>
+                  <p className="text-sm font-code bg-muted/30 p-2 rounded-md border border-secondary">{selectedCandidateDetail.skills}</p>
+                </div>
+                {selectedCandidateDetail.aiSummary && (
+                  <div>
+                    <h4 className="font-semibold text-primary-foreground mb-1">AI Generated Summary:</h4>
+                    <p className="text-sm italic bg-muted/30 p-3 rounded-md border border-secondary">{selectedCandidateDetail.aiSummary}</p>
+                  </div>
+                )}
+                <div>
+                  <h4 className="font-semibold text-primary-foreground mb-1">Full Experience Summary:</h4>
+                  <p className="text-sm whitespace-pre-line font-code bg-muted/30 p-3 rounded-md border border-secondary">{selectedCandidateDetail.experienceSummary}</p>
+                </div>
+              </div>
+            </ScrollArea>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">
+                  Close
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
-}
 
-// Ensure AppProvider wraps layout or page for context to work
-// This can be done in a new app/providers.tsx file which wraps children in RootLayout
-// Or directly in RootLayout for simplicity in this MVP.
-// For now, I'll assume context is available.
+    
