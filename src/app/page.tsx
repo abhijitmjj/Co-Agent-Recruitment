@@ -1,10 +1,19 @@
+'use client'; // Add this if not already present
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, Bot, Briefcase, Users, Zap } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSession } from 'next-auth/react'; // Import useSession
 
 export default function Home() {
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+  const featureRoleRestrictionEnabled = process.env.NEXT_PUBLIC_FEATURE_ROLE_RESTRICTION_ENABLED === 'true';
+
+  const canShowCompanyLink = !featureRoleRestrictionEnabled || !session || (userRole === 'enterprise');
+  const canShowCandidateLink = !featureRoleRestrictionEnabled || !session || (userRole === 'candidate');
+
   return (
     <div className="flex flex-col items-center justify-center space-y-12">
       <section className="text-center w-full py-12 md:py-20 lg:py-28">
@@ -20,16 +29,20 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 min-[400px]:flex-row">
-                <Button asChild size="lg" className="group bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105">
-                  <Link href="/company">
-                    For Companies <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="group border-accent text-accent hover:bg-accent/10 hover:shadow-lg hover:shadow-accent/30 transition-all duration-300 transform hover:scale-105">
-                  <Link href="/candidate">
-                    For Candidates <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
+                {canShowCompanyLink && (
+                  <Button asChild size="lg" className="group bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105">
+                    <Link href="/company">
+                      For Companies <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                )}
+                {canShowCandidateLink && (
+                  <Button asChild size="lg" variant="outline" className="group border-accent text-accent hover:bg-accent/10 hover:shadow-lg hover:shadow-accent/30 transition-all duration-300 transform hover:scale-105">
+                    <Link href="/candidate">
+                      For Candidates <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
             <Image
