@@ -20,7 +20,9 @@
     "rewrites": [
       {
         "source": "**",
-        "destination": "/index.html"
+        "apphosting": {
+          "backendId": "co-agent-recruitment-backend"
+        }
       }
     ]
   }
