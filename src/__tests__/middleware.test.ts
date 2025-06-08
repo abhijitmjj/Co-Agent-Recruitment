@@ -10,7 +10,7 @@ const testableMiddlewareLogic = (req: NextRequestWithAuth) => {
   const token = req.nextauth?.token;
   const { pathname } = req.nextUrl;
 
-  const featureRoleRestrictionEnabled = process.env.FEATURE_ROLE_RESTRICTION_ENABLED === 'true';
+  const featureRoleRestrictionEnabled = process.env.NEXT_PUBLIC_FEATURE_ROLE_RESTRICTION_ENABLED === 'true';
 
   if (featureRoleRestrictionEnabled && token) {
     if (pathname.startsWith('/company') && token.role !== 'enterprise') {
@@ -51,9 +51,9 @@ describe('Middleware Logic with Feature Toggle', () => {
     process.env = originalEnv; // Restore original env
   });
 
-  describe("When FEATURE_ROLE_RESTRICTION_ENABLED is 'false'", () => {
+  describe("When NEXT_PUBLIC_FEATURE_ROLE_RESTRICTION_ENABLED is 'false'", () => {
     beforeEach(() => {
-      process.env.FEATURE_ROLE_RESTRICTION_ENABLED = 'false';
+      process.env.NEXT_PUBLIC_FEATURE_ROLE_RESTRICTION_ENABLED = 'false';
     });
 
     const roles: (JWT['role'] | null)[] = ['enterprise', 'candidate', null, 'other'];
@@ -75,9 +75,9 @@ describe('Middleware Logic with Feature Toggle', () => {
     });
   });
 
-  describe("When FEATURE_ROLE_RESTRICTION_ENABLED is 'true'", () => {
+  describe("When NEXT_PUBLIC_FEATURE_ROLE_RESTRICTION_ENABLED is 'true'", () => {
     beforeEach(() => {
-      process.env.FEATURE_ROLE_RESTRICTION_ENABLED = 'true';
+      process.env.NEXT_PUBLIC_FEATURE_ROLE_RESTRICTION_ENABLED = 'true';
     });
 
     // Test cases for enterprise users

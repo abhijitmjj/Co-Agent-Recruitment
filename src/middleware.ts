@@ -11,8 +11,7 @@ export default withAuth(
 
     console.log('[Middleware] Path:', pathname);
     console.log('[Middleware] Feature Flag Env Var (NEXT_PUBLIC_FEATURE_ROLE_RESTRICTION_ENABLED):', featureFlagEnvVar);
-    console.log('[Middleware] Is Role Restriction Enabled:', featureRoleRestrictionEnabled);
-    console.log('[Middleware] Token:', JSON.stringify(token, null, 2));
+
 
     if (featureRoleRestrictionEnabled && token) {
       console.log('[Middleware] Role restriction is ON and token exists. Role:', token.role);

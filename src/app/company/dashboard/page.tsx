@@ -15,11 +15,11 @@ export default async function CompanyDashboardPage() {
     );
   }
 
-  if (session.user.role !== 'company') {
+  if (session.user.role !== 'enterprise') {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-4xl font-bold mb-4">Access Denied</h1>
-        <p className="text-lg mb-8">This page is for company representatives only.</p>
+        <p className="text-lg mb-8">This page is for enterprise representatives only.</p>
         <Link href="/" className="text-accent hover:underline">Go to Homepage</Link>
       </div>
     );
