@@ -7,6 +7,8 @@
   packages = [
     pkgs.nodejs_20
     pkgs.zulu
+    pkgs.bun
+    pkgs.openssl.bin
   ];
   # Sets environment variables in the workspace
   env = {};
@@ -34,7 +36,7 @@
       enable = true;
       previews = {
         web = {
-          command = ["npm" "run" "dev" "--" "--port" "$PORT" "--hostname" "0.0.0.0"];
+          command = ["bun" "next" "dev" "--port" "$PORT" "--hostname" "0.0.0.0"];
           manager = "web";
         };
       };
