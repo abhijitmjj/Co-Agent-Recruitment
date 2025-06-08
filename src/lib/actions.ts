@@ -63,7 +63,7 @@ export async function performMatchmakingAction(
         name: candidate.fullName,
         relevance: Math.random(), // Mock relevance
         details: candidate.aiSummary || candidate.experienceSummary.substring(0, 100) + '...',
-        type: 'candidate' as 'candidate',
+        type: 'candidate' as const,
       }))
       .sort((a, b) => b.relevance - a.relevance)
       .slice(0, 5); // Return top 5 matches
@@ -75,7 +75,7 @@ export async function performMatchmakingAction(
         name: job.jobTitle,
         relevance: Math.random(), // Mock relevance
         details: job.responsibilities.substring(0, 100) + '...',
-        type: 'job' as 'job',
+        type: 'job' as const,
       }))
       .sort((a, b) => b.relevance - a.relevance)
       .slice(0, 5); // Return top 5 matches

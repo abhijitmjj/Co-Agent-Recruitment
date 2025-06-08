@@ -4,6 +4,28 @@ import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import { Providers } from './providers'; // Import Providers
+import { Inter, Space_Grotesk, Source_Code_Pro } from 'next/font/google';
+
+// Configure the fonts
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter', // CSS variable for Inter
+  display: 'swap',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk', // CSS variable for Space Grotesk
+  display: 'swap',
+  weight: ['400', '500', '700'],
+});
+
+const sourceCodePro = Source_Code_Pro({
+  subsets: ['latin'],
+  variable: '--font-source-code-pro', // CSS variable for Source Code Pro
+  display: 'swap',
+  weight: ['400', '500'],
+});
 
 export const metadata: Metadata = {
   title: 'A2A Hire: Co-Agent Recruitment',
@@ -16,13 +38,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} ${sourceCodePro.variable} dark`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet" />
+        {/* Remove existing Google Font <link> tags as next/font handles this */}
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen">
         <Providers> {/* Wrap with Providers */}

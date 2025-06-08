@@ -1,5 +1,6 @@
 'use client';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React, { useState, useEffect, useMemo } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,14 +8,18 @@ import { JobDescriptionSchema, type JobDescriptionInput } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Label } from '@/components/ui/label'; // Keep if used, but FormLabel is preferred
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { getSuggestedJobTitlesAction, generateSEOKeywordsAction, performMatchmakingAction, type Candidate, type Job } from '@/lib/actions';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Briefcase, Lightbulb, Search, Sparkles, UserCheck, Loader2, Eye } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Link from 'next/link';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 
