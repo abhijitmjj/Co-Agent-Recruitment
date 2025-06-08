@@ -21,6 +21,7 @@ env:
     secret: projects/605555306967/secrets/GOOGLE_CLIENT_SECRET # Replace with your Secret Manager secret name/ref
     availability:
       - RUNTIME # Secrets are typically only needed at runtime
+      - BUILD # If you need them during the build process as well
   - variable: GITHUB_CLIENT_ID
     secret: projects/605555306967/secrets/GITHUB_CLIENT_ID # Replace with your Secret Manager secret name/ref
     availability:
@@ -30,10 +31,12 @@ env:
     secret: projects/605555306967/secrets/GITHUB_CLIENT_SECRET # Replace with your Secret Manager secret name/ref
     availability:
       - RUNTIME
+      - BUILD
   - variable: AUTH_SECRET
     secret: projects/605555306967/secrets/AUTH_SECRET # Replace with your Secret Manager secret name/ref
     availability:
       - RUNTIME
+      - BUILD
   # Example of a non-secret environment variable:
   # - variable: NODE_ENV
   #   value: production # Or dynamically set based on your needs
