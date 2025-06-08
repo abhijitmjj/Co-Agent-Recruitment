@@ -20,13 +20,13 @@ describe('Auth.js Callbacks', () => {
       expect(result.role).toBe('candidate');
     });
 
-    it('should assign "company" role if email contains "company"', async () => {
+    it('should assign "enterprise" role if email contains "enterprise"', async () => {
       const token: JWT = {};
       const user: User = { ...mockUserBase, email: 'user@company.com' };
       // @ts-ignore
       const result = await authOptions.callbacks.jwt({ token, user });
       expect(result.id).toBe('test-user-id');
-      expect(result.role).toBe('company');
+      expect(result.role).toBe('enterprise');
     });
   });
 
