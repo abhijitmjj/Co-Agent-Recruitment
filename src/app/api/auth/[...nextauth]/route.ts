@@ -1,3 +1,7 @@
+
+import { config as dotenvConfig } from 'dotenv';
+dotenvConfig(); // Load .env file variables
+
 import NextAuth, { Session, User } from 'next-auth'; // Import Session and User
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
