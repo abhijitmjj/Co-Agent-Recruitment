@@ -19,7 +19,6 @@ describe('Auth.js Callbacks', () => {
         sub: 'test-sub', // JWT requires a sub property
       };
       const user: User = { ...mockUserBase, email: 'candidate@gmail.com' };
-      // @ts-ignore // Assuming authOptions.callbacks.jwt exists
       const result = await authOptions.callbacks.jwt({ token, user });
       expect(result.id).toBe('test-user-id');
       expect(result.role).toBe('candidate');
@@ -32,7 +31,6 @@ describe('Auth.js Callbacks', () => {
         sub: 'test-sub', // JWT requires a sub property
       };
       const user: User = { ...mockUserBase, email: 'user@company.com' };
-      // @ts-ignore
       const result = await authOptions.callbacks.jwt({ token, user });
       expect(result.id).toBe('test-user-id');
       expect(result.role).toBe('enterprise');
@@ -50,7 +48,7 @@ describe('Auth.js Callbacks', () => {
         role: 'admin',
         sub: 'subject', // JWT requires a sub
       };
-      // @ts-ignore // Assuming authOptions.callbacks.session exists
+      // @ts-expect-error // Assuming authOptions.callbacks.session exists
       const result = await authOptions.callbacks.session({ session: mockSession, token: mockToken });
       expect(result.user.id).toBe('token-user-id');
       expect(result.user.role).toBe('admin');

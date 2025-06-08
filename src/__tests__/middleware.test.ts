@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { JWT } from 'next-auth/jwt'; // Changed from 'import type'
 import { NextRequestWithAuth } from 'next-auth/middleware'; // Changed from 'import type'
 
-import { test, expect, mock, describe, it, beforeEach, afterEach} from "bun:test";
+import {expect, describe, it, beforeEach, afterEach} from "bun:test";
 import { jest } from 'bun:test';
 
 // Define the core middleware logic here for testing
@@ -29,7 +29,8 @@ const testableMiddlewareLogic = (req: NextRequestWithAuth) => {
 // Mock NextResponse methods
 // Directly mock NextResponse methods for Bun (no requireActual support)
 NextResponse.next = jest.fn(() => new NextResponse(null));
-NextResponse.redirect = jest.fn((url, init?) => NextResponse.json({ type: 'redirect', url: url.toString() }));
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+NextResponse.redirect = jest.fn((url, _init?) => NextResponse.json({ type: 'redirect', url: url.toString() }));
 
 const createMockRequest = (pathname: string, token: JWT | null): NextRequestWithAuth => {
   const req = new NextRequest(new URL(`http://localhost${pathname}`)) as NextRequestWithAuth;
