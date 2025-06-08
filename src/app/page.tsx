@@ -48,7 +48,7 @@ export default function Home() {
               </div>
             </div>
             <Image
-              src="https://placehold.co/600x400.png"
+              src="https://c.pxhere.com/images/fc/a3/17c12545f815bd2410b401e41ce3-1445419.jpg!d"
               alt="AI Recruitment"
               data-ai-hint="AI recruitment network"
               width={600}
