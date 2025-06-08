@@ -1,7 +1,12 @@
 import { config as dotenvConfig } from 'dotenv';
 
+console.log(`[Auth Route] Current NODE_ENV: ${process.env.NODE_ENV}`);
+
 if (process.env.NODE_ENV !== 'production') {
+  console.log('[Auth Route] NODE_ENV is not "production", calling dotenvConfig().');
   dotenvConfig(); // Load .env file variables
+} else {
+  console.log('[Auth Route] NODE_ENV is "production", skipping dotenvConfig().');
 }
 
 import NextAuth, { Session, User } from 'next-auth'; // Import Session and User
