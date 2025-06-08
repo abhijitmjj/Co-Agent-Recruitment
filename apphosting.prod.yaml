@@ -42,6 +42,10 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: GEMINI_API_KEY
+    secret: projects/605555306967/secrets/GEMINI_API_KEY
+    availability:
+      - RUNTIME
   # Example of a non-secret environment variable:
   # - variable: NODE_ENV
   #   value: production # Or dynamically set based on your needs
