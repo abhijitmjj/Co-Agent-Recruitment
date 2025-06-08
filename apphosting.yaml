@@ -13,25 +13,25 @@ env:
   # These will be available as environment variables:
   # process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, etc.
   - variable: GOOGLE_CLIENT_ID
-    secret: GOOGLE_CLIENT_ID_SECRET # Replace with your Secret Manager secret name/ref
+    secret: projects/605555306967/secrets/GOOGLE_CLIENT_ID # Replace with your Secret Manager secret name/ref
     availability:
       - BUILD
       - RUNTIME
   - variable: GOOGLE_CLIENT_SECRET
-    secret: GOOGLE_CLIENT_SECRET_SECRET # Replace with your Secret Manager secret name/ref
+    secret: projects/605555306967/secrets/GOOGLE_CLIENT_SECRET # Replace with your Secret Manager secret name/ref
     availability:
       - RUNTIME # Secrets are typically only needed at runtime
   - variable: GITHUB_CLIENT_ID
-    secret: GITHUB_CLIENT_ID_SECRET # Replace with your Secret Manager secret name/ref
+    secret: projects/605555306967/secrets/GITHUB_CLIENT_ID # Replace with your Secret Manager secret name/ref
     availability:
       - BUILD
       - RUNTIME
   - variable: GITHUB_CLIENT_SECRET
-    secret: GITHUB_CLIENT_SECRET_SECRET # Replace with your Secret Manager secret name/ref
+    secret: projects/605555306967/secrets/GITHUB_CLIENT_SECRET # Replace with your Secret Manager secret name/ref
     availability:
       - RUNTIME
   - variable: AUTH_SECRET
-    secret: AUTH_SECRET_SECRET # Replace with your Secret Manager secret name/ref
+    secret: projects/605555306967/secrets/AUTH_SECRET # Replace with your Secret Manager secret name/ref
     availability:
       - RUNTIME
   # Example of a non-secret environment variable:
