@@ -7,7 +7,7 @@ runConfig:
   # cpu: 1
   # memoryMiB: 512
 
-# Environment variables and secrets.
+  # Environment variables and secrets.
 env:
   # Grant access to secrets in Cloud Secret Manager.
   # These will be available as environment variables:
@@ -41,6 +41,10 @@ env:
     value: https://co-agent-recruitment-backend--gen-lang-client-0249131775.us-central1.hosted.app # <-- IMPORTANT: Replace this with your actual Firebase App URL
     availability:
       - BUILD
+      - RUNTIME
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
+    availability:
       - RUNTIME
   # Example of a non-secret environment variable:
   # - variable: NODE_ENV
