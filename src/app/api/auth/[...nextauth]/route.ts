@@ -1,30 +1,11 @@
-import { config as dotenvConfig } from 'dotenv';
-
-console.log(`[Auth Route] Current NODE_ENV: ${process.env.NODE_ENV}`);
-
-if (process.env.NODE_ENV !== 'production') {
-  console.log('[Auth Route] NODE_ENV is not "production", calling dotenvConfig().');
-  dotenvConfig(); // Load .env file variables
-} else {
-  console.log('[Auth Route] NODE_ENV is "production", skipping dotenvConfig().');
-}
-
 import NextAuth, { Session, User } from 'next-auth'; // Import Session and User
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import { JWT } from 'next-auth/jwt'; // Import JWT
+import { checkAuthEnvironmentVariables } from '@/lib/env-check'; // Import the new check function
 
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  throw new Error('Missing Google OAuth environment variables');
-}
-
-if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET) {
-  throw new Error('Missing GitHub OAuth environment variables');
-}
-
-if (!process.env.AUTH_SECRET) {
-  throw new Error('Missing AUTH_SECRET environment variable');
-}
+// Call the function to check environment variables during initialization
+checkAuthEnvironmentVariables();
 
 // Add this export:
 export const authOptions = {
