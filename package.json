@@ -13,8 +13,6 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@auth/core": "^0.39.1",
-    "@auth/nextjs": "^0.0.0-380f8d56",
     "@genkit-ai/googleai": "^1.8.0",
     "@genkit-ai/next": "^1.8.0",
     "@google/genai": "^1.4.0",
