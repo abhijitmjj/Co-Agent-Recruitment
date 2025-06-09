@@ -38,7 +38,7 @@ env:
       - RUNTIME
       - BUILD
   - variable: NEXTAUTH_URL
-    value: https://co-agent-recruitment-backend--gen-lang-client-0249131775.us-central1.hosted.app # <-- IMPORTANT: Replace this with your actual Firebase App URL
+    value: https://a2a-githubaction--gen-lang-client-0249131775.us-central1.hosted.app # <-- IMPORTANT: Replace this with your actual Firebase App URL
     availability:
       - BUILD
       - RUNTIME
