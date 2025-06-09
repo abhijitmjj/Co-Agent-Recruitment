@@ -11,17 +11,11 @@
     ]
   },
   "hosting": {
-    "public": "./.next",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/server/index.html"
-      }
     ]
   }
 }

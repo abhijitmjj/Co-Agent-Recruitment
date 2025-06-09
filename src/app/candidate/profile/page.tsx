@@ -1,6 +1,6 @@
 // src/app/candidate/profile/page.tsx
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // Adjust path if needed
+import { authOptions } from '@/lib/auth'; // Adjust path to the new auth.ts file
 import Link from 'next/link';
 
 export default async function CandidateProfilePage() {

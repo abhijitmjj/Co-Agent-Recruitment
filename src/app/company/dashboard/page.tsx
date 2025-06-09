@@ -1,6 +1,6 @@
 // src/app/company/dashboard/page.tsx
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // Adjust path if needed
+import { authOptions } from '@/lib/auth'; // Import authOptions from the new file
 import Link from 'next/link';
 
 export default async function CompanyDashboardPage() {
