@@ -1,4 +1,7 @@
 // __tests__/auth.callbacks.test.ts
+jest.mock('@/lib/env-check', () => ({
+  checkAuthEnvironmentVariables: jest.fn(),
+}));
 import { authOptions } from '@/lib/auth'; // Corrected import path
 import { ROLES } from '@/lib/constants';
 import { Account, Session, User } from 'next-auth';
