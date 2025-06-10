@@ -23,12 +23,12 @@ env:
       - RUNTIME # Secrets are typically only needed at runtime
       - BUILD # If you need them during the build process as well
   - variable: GITHUB_CLIENT_ID
-    secret: projects/605555306967/secrets/GITHUB_CLIENT_ID # Replace with your Secret Manager secret name/ref
+    secret: projects/605555306967/secrets/DEV_GITHUB_CLIENT_ID # Replace with your Secret Manager secret name/ref
     availability:
       - BUILD
       - RUNTIME
   - variable: GITHUB_CLIENT_SECRET
-    secret: projects/605555306967/secrets/GITHUB_CLIENT_SECRET # Replace with your Secret Manager secret name/ref
+    secret: projects/605555306967/secrets/DEV_GITHUB_CLIENT_SECRET # Replace with your Secret Manager secret name/ref
     availability:
       - RUNTIME
       - BUILD
