@@ -3,6 +3,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import { JWT } from 'next-auth/jwt';
 import { checkAuthEnvironmentVariables } from '@/lib/env-check';
+import { ROLES } from './constants';
 
 // Call the function to check environment variables during initialization
 checkAuthEnvironmentVariables();
@@ -40,9 +41,9 @@ export const authOptions: AuthOptions = {
         ];
 
         if (publicDomains.includes(domain)) {
-          token.role = 'candidate'; // User with a public email domain
+          token.role = ROLES.CANDIDATE; // User with a public email domain
         } else {
-          token.role = 'enterprise'; // User with a non-public/company domain
+          token.role = ROLES.ENTERPRISE; // User with a non-public/enterprise domain
         }
       }
       return token;

@@ -3,7 +3,7 @@
 import { summarizeCandidateProfile, type SummarizeCandidateProfileInput } from '@/ai/flows/summarize-candidate-profile';
 import { generateSEOKeywords, type GenerateSEOKeywordsInput } from '@/ai/flows/generate-seo-keywords';
 import { suggestJobTitles, type SuggestJobTitlesInput } from '@/ai/flows/suggest-job-titles';
-import type { CandidateProfileInput, JobDescriptionInput } from './schemas';
+import { CandidateProfileSchema, JobDescriptionSchema, type CandidateProfileInput, type JobDescriptionInput } from './schemas';
 
 export async function getSuggestedJobTitlesAction(input: SuggestJobTitlesInput) {
   try {
@@ -47,33 +47,39 @@ export interface Candidate extends CandidateProfileInput {
   aiSummary?: string;
 }
 
+// Type guards for robust validation
+export const isJob = (item: any): item is Job => JobDescriptionSchema.safeParse(item).success;
+export const isCandidate = (item: any): item is Candidate => CandidateProfileSchema.safeParse(item).success;
+
+
 // This is a mock matchmaking function. In a real app, this would be a complex AI call.
 export async function performMatchmakingAction(
   item: Job | Candidate,
-  allItems: (Job | Candidate)[]
+  allItems: (Job | Candidate)[],
+  relevanceFn: (item: Job | Candidate, index: number) => number = () => Math.random()
 ): Promise<{ id: string; name: string; relevance: number; details: string; type: 'job' | 'candidate' }[]> {
   // Simulate AI matchmaking
   await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
 
-  if ('jobTitle' in item) { // item is Job, find Candidates
-    return (allItems as Candidate[])
-      .filter(candidate => 'fullName' in candidate) // Ensure it's a candidate
-      .map(candidate => ({
+  if (isJob(item)) { // item is Job, find Candidates
+    return allItems
+      .filter(isCandidate)
+      .map((candidate, index) => ({
         id: candidate.id,
         name: candidate.fullName,
-        relevance: Math.random(), // Mock relevance
+        relevance: relevanceFn(candidate, index), // Mock relevance
         details: candidate.aiSummary || candidate.experienceSummary.substring(0, 100) + '...',
         type: 'candidate' as const,
       }))
       .sort((a, b) => b.relevance - a.relevance)
       .slice(0, 5); // Return top 5 matches
   } else { // item is Candidate, find Jobs
-    return (allItems as Job[])
-      .filter(job => 'jobTitle' in job) // Ensure it's a job
-      .map(job => ({
+    return allItems
+      .filter(isJob)
+      .map((job, index) => ({
         id: job.id,
         name: job.jobTitle,
-        relevance: Math.random(), // Mock relevance
+        relevance: relevanceFn(job, index), // Mock relevance
         details: job.responsibilities.substring(0, 100) + '...',
         type: 'job' as const,
       }))
