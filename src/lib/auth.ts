@@ -10,16 +10,36 @@ checkAuthEnvironmentVariables();
 
 export const authOptions: AuthOptions = {
   providers: [
+    // Google: force account chooser every time by using the `prompt`
+    // parameter.  This prevents automatic re-login with the previous Google
+    // account after signing out of the app.
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          // `select_account` makes Google always show the account-picker.
+          // `consent` guarantees the refresh_token is returned on first login.
+          prompt: 'select_account consent',
+          access_type: 'offline',
+          response_type: 'code',
+        },
+      },
     }),
+    // GitHub: `prompt=login` forces GitHub to ask for credentials again.
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: 'login',
+        },
+      },
     }),
   ],
-  secret: process.env.AUTH_SECRET!,
+  // Prefer the standard NEXTAUTH_SECRET but fall back to the historical
+  // AUTH_SECRET so existing deployments & tests continue to work.
+  secret: (process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET)!,
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: User | undefined }) {
       if (user && user.email) {
