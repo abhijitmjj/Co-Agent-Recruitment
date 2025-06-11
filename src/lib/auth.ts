@@ -3,22 +3,43 @@ import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import { JWT } from 'next-auth/jwt';
 import { checkAuthEnvironmentVariables } from '@/lib/env-check';
+import { ROLES } from './constants';
 
 // Call the function to check environment variables during initialization
 checkAuthEnvironmentVariables();
 
 export const authOptions: AuthOptions = {
   providers: [
+    // Google: force account chooser every time by using the `prompt`
+    // parameter.  This prevents automatic re-login with the previous Google
+    // account after signing out of the app.
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          // `select_account` makes Google always show the account-picker.
+          // `consent` guarantees the refresh_token is returned on first login.
+          prompt: 'select_account consent',
+          access_type: 'offline',
+          response_type: 'code',
+        },
+      },
     }),
+    // GitHub: `prompt=login` forces GitHub to ask for credentials again.
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: 'login',
+        },
+      },
     }),
   ],
-  secret: process.env.AUTH_SECRET!,
+  // Prefer the standard NEXTAUTH_SECRET but fall back to the historical
+  // AUTH_SECRET so existing deployments & tests continue to work.
+  secret: (process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET)!,
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: User | undefined }) {
       if (user && user.email) {
@@ -40,9 +61,9 @@ export const authOptions: AuthOptions = {
         ];
 
         if (publicDomains.includes(domain)) {
-          token.role = 'candidate'; // User with a public email domain
+          token.role = ROLES.CANDIDATE; // User with a public email domain
         } else {
-          token.role = 'enterprise'; // User with a non-public/company domain
+          token.role = ROLES.ENTERPRISE; // User with a non-public/enterprise domain
         }
       }
       return token;
