@@ -45,3 +45,13 @@ firebase-debug.log
 firestore-debug.log
 # Python
 .venv
+
+#qdrant
+qdrant_data
+qdrant_storage
+*.bk
+
+__pycache__
+*.py[cod]
+**/__pycache__
+__pycache__/
