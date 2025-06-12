@@ -1,0 +1,169 @@
+{
+    "certifications": [
+        {
+            "date_issued": "2025",
+            "issuing_organization": "Columbia University",
+            "name": "Financial Engineering & Risk Management Specialization"
+        },
+        {
+            "date_issued": "Jun 2025",
+            "issuing_organization": "NVIDIA",
+            "name": "Rapid Application Development with Large Language Models (LLMs)"
+        },
+        {
+            "date_issued": "2025",
+            "issuing_organization": "Coursera, Columbia University",
+            "name": "Optimization methods in Asset Management"
+        },
+        {
+            "date_issued": "2025",
+            "issuing_organization": "Microsoft",
+            "name": "AI and Machine Learning Algorithms and Techniques"
+        },
+        {
+            "date_issued": "2023",
+            "issuing_organization": "Coursera",
+            "name": "Bayesian Statistics"
+        },
+        {
+            "date_issued": "Dec 2022",
+            "issuing_organization": "NVIDIA DLI",
+            "name": "Accelerating Data Engineering Pipelines"
+        },
+        {
+            "date_issued": "Nov 2022",
+            "issuing_organization": "NVIDIA DLI",
+            "name": "Natural Language Processing"
+        },
+        {
+            "date_issued": "Sep 2022",
+            "issuing_organization": "NVIDIA DLI",
+            "name": "Fundamentals of Deep Learning"
+        }
+    ],
+    "education": [
+        {
+            "degree": "PhD",
+            "field_of_study": "Machine Learning",
+            "graduation_date": "2022",
+            "institution": "Indian Institute of Science Education and Research (IISER), Pune",
+            "start_date": null
+        },
+        {
+            "degree": "MS",
+            "field_of_study": "Computational Science",
+            "graduation_date": "2017",
+            "institution": "IISER Pune",
+            "start_date": null
+        },
+        {
+            "degree": "B.Sc.",
+            "field_of_study": null,
+            "graduation_date": "2015",
+            "institution": "Hindu College, University of Delhi",
+            "start_date": null
+        }
+    ],
+    "inferred_experience_level": "Lead",
+    "languages": null,
+    "personal_details": {
+        "email": "abhijit038@gmail.com",
+        "full_name": "ABHIJIT GUPTA",
+        "links": [
+            {
+                "type": "LinkedIn",
+                "url": "linkedin.com/in/abhijit-gupta-phd-639568166/"
+            }
+        ],
+        "location": {
+            "city": "Bengaluru",
+            "country": "India",
+            "state": null
+        },
+        "phone_number": "+91 9561930406"
+    },
+    "professional_summary": "PhD‑trained ML scientist with 7+ years converting research into production. Generated £8 m+ in cost savings and 10 % alpha on £210 m commodity exposure. Deep expertise spans Bayesian inference, time‑series & causal modelling, graph neural networks, and large‑scale optimisation. Adept at partnering with business and engineering leaders to ship high‑impact solutions on Azure while mentoring cross‑functional teams. Multiple national AI wins and government‑funded research underscore a record of innovation and delivery.",
+    "projects": null,
+    "skills": {
+        "soft_skills": [
+            "Mentoring",
+            "Agile / OKRs"
+        ],
+        "technical": {
+            "cloud_platforms": [
+                "Azure ML"
+            ],
+            "databases": null,
+            "frameworks_libraries": [
+                "Spark",
+                "Deep / Graph NN",
+                "LLM/LLMOps",
+                "Agentic AI"
+            ],
+            "programming_languages": [
+                "Python",
+                "C++",
+                "Java"
+            ],
+            "tools_technologies": [
+                "Bayesian Inference",
+                "Causal TS",
+                "Econometrics",
+                "Databricks",
+                "Docker",
+                "Kubernetes",
+                "GitLab CI/CD",
+                "Financial Risk Management",
+                "Commodity Hedging",
+                "Risk Analytics",
+                "Fraud Detection",
+                "Algorithms Design",
+                "Generative AI/LLM for Finance"
+            ]
+        }
+    },
+    "total_years_experience": 7,
+    "work_experience": [
+        {
+            "company": "TESCO",
+            "end_date": null,
+            "is_current": true,
+            "job_title": "Data Scientist",
+            "location": "Bengaluru, India",
+            "responsibilities": [
+                "Designed and deployed proprietary ML hedging models covering > £210 m in commodity futures; out‑performed market benchmarks by 10 % and realised £8 m savings.",
+                "Earned back-to-back “Exceptional” performance ratings for driving high-impact ML solutions in commodity risk management.",
+                "Built pricing & inventory‑optimization pipelines integrated with Azure ML + Databricks that recommends optimal implied cover levels across inflationary and deflationary cycles, enabling intelligent buying decisions that cut stock‑outs 9 % and lifted gross margin 3 pp.",
+                "Championed CI/CD-driven model governance with automated drift monitoring, reducing release cycle time by 40%.",
+                "Mentored data scientists, streamlining experiment workflows to cut model iteration time by 30 % and reduce postdeployment defects by 20 %."
+            ],
+            "start_date": "Nov 2023"
+        },
+        {
+            "company": "NICE ACTIMIZE",
+            "end_date": "Nov 2023",
+            "is_current": false,
+            "job_title": "Tech Lead, Data Scientist",
+            "location": null,
+            "responsibilities": [
+                "Led 6‑member squad; probabilistic‑graph fraud models ↑ true positives 18 %, added $1 m+ YoY revenue.",
+                "Won company-wide CoDay 2022 for building scalable election-risk simulation using Java and Spark; recognized by CTO for innovation in risk modelling architecture.",
+                "Instituted Agile OKRs across the data science pipeline, increasing sprint on-time delivery from 68% to 92% by aligning delivery with strategic objectives."
+            ],
+            "start_date": "Feb 2021"
+        },
+        {
+            "company": "INTEL CORPORATION",
+            "end_date": "Jan 2022",
+            "is_current": false,
+            "job_title": "AI Ambassador (Part‑time)",
+            "location": null,
+            "responsibilities": [
+                "Created Computer Vision & NLP demos for Intel accelerators; tutorials viewed 8 k+ times.",
+                "Delivered 10+ workshops on ML applications in science and engineering to 300+ professionals; topics included deep learning and domain-specific use cases.",
+                "Contributed to open‑source OneAPI examples; code featured in Intel Developer Zone."
+            ],
+            "start_date": "Jul 2018"
+        }
+    ]
+}
