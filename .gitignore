@@ -39,7 +39,27 @@ next-env.d.ts
 
 .genkit/*
 .env*
+!.env.example
 
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+*.egg-info/
+
+# Security and secrets
+/secrets/
+*.key
+*.crt
+*.csr
+/private/
+
+# Temporary files
+/tmp/
+*.tmp
+*.bak
