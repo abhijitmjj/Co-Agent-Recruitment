@@ -14,11 +14,19 @@ const createSecureStringSchema = (minLength: number, maxLength: number, fieldNam
   return z.string()
     .min(minLength, { message: `${fieldName} must be at least ${minLength} characters.` })
     .max(maxLength, { message: `${fieldName} must not exceed ${maxLength} characters.` })
-    .transform(sanitizeText)
     .refine(
       (text) => !text.includes('<script'),
       { message: `${fieldName} contains invalid content.` }
     )
+    .refine(
+      (text) => !/javascript:/gi.test(text),
+      { message: `${fieldName} contains invalid content.` }
+    )
+    .refine(
+      (text) => !/on\w+\s*=/gi.test(text),
+      { message: `${fieldName} contains invalid content.` }
+    )
+    .transform(sanitizeText)
     .refine(
       (text) => text.length >= minLength,
       { message: `${fieldName} must be at least ${minLength} characters after sanitization.` }

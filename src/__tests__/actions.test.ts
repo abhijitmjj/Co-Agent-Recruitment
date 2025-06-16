@@ -1,3 +1,16 @@
+// Mock the genkit flows to avoid module import issues
+jest.mock('@/ai/flows/summarize-candidate-profile', () => ({
+  summarizeCandidateProfile: jest.fn(),
+}));
+
+jest.mock('@/ai/flows/generate-seo-keywords', () => ({
+  generateSEOKeywords: jest.fn(),
+}));
+
+jest.mock('@/ai/flows/suggest-job-titles', () => ({
+  suggestJobTitles: jest.fn(),
+}));
+
 import { performMatchmakingAction, isJob, isCandidate } from '../lib/actions';
 import type { Job, Candidate } from '../lib/actions';
 

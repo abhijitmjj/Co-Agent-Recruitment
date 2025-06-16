@@ -41,9 +41,11 @@ jest.mock('next/server', () => {
 });
 
 const createMockRequest = (pathname: string, token: JWT | null): NextRequestWithAuth => {
-  const req = new NextRequest(new URL(`http://localhost${pathname}`)) as NextRequestWithAuth;
-  req.nextUrl.pathname = pathname; // Ensure pathname is correctly set for startsWith checks
-  req.nextauth = { token: token }; 
+  const req = {
+    url: `http://localhost${pathname}`,
+    nextUrl: { pathname },
+    nextauth: { token },
+  } as NextRequestWithAuth;
   return req;
 };
 
@@ -181,18 +183,18 @@ const mockAuthorizedCallback = (params: { req: NextRequest; token: JWT | null })
 describe('Middleware Logic - Authorized Callback (Legacy)', () => {
   describe('authorized callback', () => {
     it('should authorize access to /candidate for logged-in user', () => {
-      const req = new NextRequest(new URL('http://localhost/candidate/profile'));
+      const req = { nextUrl: { pathname: '/candidate/profile' } } as NextRequest;
       const token: JWT = { id: '1', role: 'candidate', sub: 'sub' };
       expect(mockAuthorizedCallback({ req, token })).toBe(true);
     });
 
     it('should deny access to /candidate for logged-out user', () => {
-      const req = new NextRequest(new URL('http://localhost/candidate/profile'));
+      const req = { nextUrl: { pathname: '/candidate/profile' } } as NextRequest;
       expect(mockAuthorizedCallback({ req, token: null })).toBe(false);
     });
 
     it('should authorize access to public routes for logged-out user', () => {
-      const req = new NextRequest(new URL('http://localhost/'));
+      const req = { nextUrl: { pathname: '/' } } as NextRequest;
       expect(mockAuthorizedCallback({ req, token: null })).toBe(true);
     });
   });
