@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "a2a-samples Docs": {
+      "url": "https://gitmcp.io/google-a2a/a2a-samples/",
+      "disabled": false,
+      "autoApprove": []
+    },
+    "A2A Docs": {
+      "url": "https://gitmcp.io/google-a2a/A2A",
+      "disabled": false,
+      "autoApprove": [],
+      "alwaysAllow": [
+        "search_A2A_documentation",
+        "search_A2A_code",
+        "fetch_A2A_documentation"
+      ]
+    },
+    "adk-python Docs": {
+      "url": "https://gitmcp.io/google/adk-python",
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
