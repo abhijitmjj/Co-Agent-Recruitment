@@ -1,0 +1,43 @@
+[project]
+name = "co-agent-recruitment"
+version = "0.1.0"
+description = "Python integration for Co-Agent-Recruitment project"
+authors = [{ name = "Abhijit Gupta" }, {name = "Roopal Bansal"}]
+readme = "README.md"
+requires-python = ">=3.13"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "a2a-sdk>=0.2.7",
+    "fastapi",
+    "google-adk>=1.2.1",
+    "google-genai>=1.20.0",
+    "litellm>=1.72.4",
+    "pip>=25.1.1",
+    "pydantic-ai-slim[a2a]>=0.2.16",
+    "pydantic-ai[a2a]>=0.2.16",
+    "pydantic>=2.0.0",  # Ensure latest pydantic for security fixes
+    "uvicorn",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["co_agent_recruitment"]
+
+[dependency-groups]
+dev = [
+    "ipython>=9.3.0",
+    "jupyter>=1.1.1",
+    "pyrefly>=0.19.0",
+]
