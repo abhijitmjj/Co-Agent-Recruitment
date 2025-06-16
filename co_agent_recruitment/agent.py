@@ -1,10 +1,12 @@
+from typing import Any
 import datetime
 import asyncio
 import os
 import re
 from typing import List, Literal, Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from pydantic_ai import Agent as PydanticAgent
+from pydantic_ai.models.gemini import GeminiModel
 from google.adk.agents import Agent
 
 
@@ -15,14 +17,16 @@ class Location(BaseModel):
     countryCode: Optional[str] = Field(None, description='code as per ISO-3166-1 ALPHA-2, e.g. US, AU, IN')
     region: Optional[str] = Field(None, description='The general region where you live. Can be a US state, or a province, for instance.')
 
-    @validator('address')
-    def validate_address(cls, v):
+    @field_validator('address')
+    @classmethod
+    def validate_address(cls, v: Optional[str]) -> Optional[str]:
         if v and len(v) > 500:
             raise ValueError('Address too long')
         return v
 
-    @validator('countryCode')
-    def validate_country_code(cls, v):
+    @field_validator('countryCode')
+    @classmethod
+    def validate_country_code(cls, v: Optional[str]) -> Optional[str]:
         if v and not re.match(r'^[A-Z]{2}$', v):
             raise ValueError('Invalid country code format')
         return v
@@ -34,8 +38,9 @@ class Link(BaseModel):
     )
     url: str = Field(..., description="The URL of the link.")
 
-    @validator('url')
-    def validate_url(cls, v):
+    @field_validator('url')
+    @classmethod
+    def validate_url(cls, v: str) -> str:
         # Basic URL validation to prevent malicious URLs
         if not re.match(r'^https?://', v):
             raise ValueError('URL must start with http:// or https://')
@@ -57,8 +62,9 @@ class PersonalDetails(BaseModel):
         None, description="A list of links to professional profiles."
     )
 
-    @validator('full_name')
-    def validate_full_name(cls, v):
+    @field_validator('full_name')
+    @classmethod
+    def validate_full_name(cls, v: str) -> str:
         if len(v) > 100:
             raise ValueError('Full name too long')
         # Remove potential script tags or suspicious content
@@ -66,8 +72,9 @@ class PersonalDetails(BaseModel):
             raise ValueError('Invalid characters in full name')
         return v
 
-    @validator('email')
-    def validate_email(cls, v):
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v: Optional[str]) -> Optional[str]:
         if v and not re.match(r'^[^@]+@[^@]+\.[^@]+$', v):
             raise ValueError('Invalid email format')
         return v
@@ -84,8 +91,9 @@ class WorkExperience(BaseModel):
         None, description="A list of responsibilities."
     )
 
-    @validator('responsibilities')
-    def validate_responsibilities(cls, v):
+    @field_validator('responsibilities')
+    @classmethod
+    def validate_responsibilities(cls, v: Optional[List[str]]) -> Optional[List[str]]:
         if v:
             for resp in v:
                 if len(resp) > 1000:
@@ -154,8 +162,9 @@ class Project(BaseModel):
     )
     link: Optional[str] = Field(None, description="A link to the project.")
 
-    @validator('link')
-    def validate_link(cls, v):
+    @field_validator('link')
+    @classmethod
+    def validate_link(cls, v: Optional[str]) -> Optional[str]:
         if v and not re.match(r'^https?://', v):
             raise ValueError('Project link must start with http:// or https://')
         return v
@@ -184,8 +193,9 @@ class Volunteer(BaseModel):
     summary: Optional[str] = Field(None, description='Give an overview of your responsibilities at the company')
     highlights: Optional[List[str]] = Field(None, description='Specify accomplishments and achievements')
 
-    @validator('url')
-    def validate_url(cls, v):
+    @field_validator('url')
+    @classmethod
+    def validate_url(cls, v: Optional[str]) -> Optional[str]:
         if v and not re.match(r'^https?://', v):
             raise ValueError('Volunteer URL must start with http:// or https://')
         return v
@@ -258,7 +268,7 @@ def get_model_name() -> str:
     return os.getenv('GEMINI_MODEL', 'gemini-2.5-flash-preview-05-20')
 
 
-async def parse_resume(resume_text: str) -> dict:
+async def parse_resume(resume_text: str) -> dict[str, Any]:
     """Parses unstructured resume text and returns a structured JSON object.
 
     Args:
@@ -279,7 +289,7 @@ async def parse_resume(resume_text: str) -> dict:
         model_name = get_model_name()
         
         agent = PydanticAgent(
-            model_name,
+            GeminiModel(model_name=model_name, provider='google-vertex'),
             instructions="You are an expert AI resume parser. Your task is to transform the unstructured resume text provided below into a single, structured, and comprehensive JSON object suitable for a modern Applicant Tracking System (ATS). Only extract information explicitly present in the text.",
         )
         result = await agent.run(sanitized_text, output_type=Resume)

@@ -4,3 +4,4 @@ This package provides secure resume parsing functionality with proper input vali
 """
 
 __version__ = "0.1.0"
+from co_agent_recruitment import agent

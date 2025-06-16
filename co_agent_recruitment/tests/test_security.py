@@ -2,7 +2,7 @@
 
 import pytest
 import asyncio
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, MagicMock
 from co_agent_recruitment.agent import (
     sanitize_input, 
     parse_resume, 
@@ -117,18 +117,38 @@ class TestResumeParsingErrors:
     async def test_parse_resume_sanitizes_input(self):
         """Test that parse_resume sanitizes input."""
         with patch('co_agent_recruitment.agent.PydanticAgent') as mock_agent_class:
-            mock_agent = AsyncMock()
-            mock_agent.run.return_value.output.model_dump.return_value = {"test": "data"}
-            mock_agent_class.return_value = mock_agent
+            # This is the mock for the PydanticAgent class.
+            # When PydanticAgent() is called, it will return mock_agent_instance.
+            mock_agent_instance = AsyncMock(name="PydanticAgent_instance_mock")
+            mock_agent_class.return_value = mock_agent_instance
+
+            # This is the synchronous object that `await agent.run(...)` should yield.
+            sync_run_result = MagicMock(name="run_result_sync_mock")
+            sync_run_result.output.model_dump.return_value = {"test": "data"}
+
+            # Explicitly set the 'run' attribute of mock_agent_instance to be an AsyncMock.
+            # This AsyncMock, when awaited, will return sync_run_result.
+            mock_agent_instance.run = AsyncMock(return_value=sync_run_result, name="run_method_async_mock")
             
             malicious_resume = "John Doe <script>alert('xss')</script> Software Engineer"
-            result = await parse_resume(malicious_resume)
+            # Inside parse_resume:
+            # 1. agent = PydanticAgent(...) becomes agent = mock_agent_instance
+            # 2. result = await agent.run(...) becomes result = await mock_agent_instance.run(...)
+            #    Since mock_agent_instance.run is an AsyncMock returning sync_run_result,
+            #    `result` becomes `sync_run_result`.
+            # 3. return result.output.model_dump() becomes return sync_run_result.output.model_dump()
+            #    This is a synchronous call on a MagicMock, returning {"test": "data"}.
+            parsed_output = await parse_resume(malicious_resume)
             
-            # Check that the agent was called with sanitized input
-            called_args = mock_agent.run.call_args
-            sanitized_input = called_args[0][0]
-            assert "<script>" not in sanitized_input
-            assert "alert" not in sanitized_input
+            assert parsed_output == {"test": "data"}
+
+            # Check that the agent's run method was called with sanitized input
+            called_args = mock_agent_instance.run.call_args
+            sanitized_input_arg = called_args[0][0]
+            assert "<script>" not in sanitized_input_arg
+            assert "alert" not in sanitized_input_arg
+        
+        await asyncio.sleep(0)  # Allow event loop to process pending tasks
     
     @pytest.mark.asyncio
     async def test_parse_resume_handles_exceptions(self):
