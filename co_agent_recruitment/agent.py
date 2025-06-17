@@ -8,27 +8,36 @@ from pydantic import BaseModel, Field, field_validator
 from pydantic_ai import Agent as PydanticAgent
 from pydantic_ai.models.gemini import GeminiModel
 from google.adk.agents import Agent
+from co_agent_recruitment.job_posting import analyze_job_posting, job_posting_agent
 
 
 class Location(BaseModel):
-    address: Optional[str] = Field(None, description='To add multiple address lines, use \\n. For example, 1234 Street Name\\nBuilding 5. Floor 2.')
+    address: Optional[str] = Field(
+        None,
+        description="To add multiple address lines, use \\n. For example, 1234 Street Name\\nBuilding 5. Floor 2.",
+    )
     postalCode: Optional[str] = Field(None)
     city: Optional[str] = Field(None)
-    countryCode: Optional[str] = Field(None, description='code as per ISO-3166-1 ALPHA-2, e.g. US, AU, IN')
-    region: Optional[str] = Field(None, description='The general region where you live. Can be a US state, or a province, for instance.')
+    countryCode: Optional[str] = Field(
+        None, description="code as per ISO-3166-1 ALPHA-2, e.g. US, AU, IN"
+    )
+    region: Optional[str] = Field(
+        None,
+        description="The general region where you live. Can be a US state, or a province, for instance.",
+    )
 
-    @field_validator('address')
+    @field_validator("address")
     @classmethod
     def validate_address(cls, v: Optional[str]) -> Optional[str]:
         if v and len(v) > 500:
-            raise ValueError('Address too long')
+            raise ValueError("Address too long")
         return v
 
-    @field_validator('countryCode')
+    @field_validator("countryCode")
     @classmethod
     def validate_country_code(cls, v: Optional[str]) -> Optional[str]:
-        if v and not re.match(r'^[A-Z]{2}$', v):
-            raise ValueError('Invalid country code format')
+        if v and not re.match(r"^[A-Z]{2}$", v):
+            raise ValueError("Invalid country code format")
         return v
 
 
@@ -38,14 +47,14 @@ class Link(BaseModel):
     )
     url: str = Field(..., description="The URL of the link.")
 
-    @field_validator('url')
+    @field_validator("url")
     @classmethod
     def validate_url(cls, v: str) -> str:
         # Basic URL validation to prevent malicious URLs
-        if not re.match(r'^https?://', v):
-            raise ValueError('URL must start with http:// or https://')
+        if not re.match(r"^https?://", v):
+            raise ValueError("URL must start with http:// or https://")
         if len(v) > 2000:
-            raise ValueError('URL too long')
+            raise ValueError("URL too long")
         return v
 
 
@@ -62,21 +71,21 @@ class PersonalDetails(BaseModel):
         None, description="A list of links to professional profiles."
     )
 
-    @field_validator('full_name')
+    @field_validator("full_name")
     @classmethod
     def validate_full_name(cls, v: str) -> str:
         if len(v) > 100:
-            raise ValueError('Full name too long')
+            raise ValueError("Full name too long")
         # Remove potential script tags or suspicious content
-        if re.search(r'<[^>]*>', v):
-            raise ValueError('Invalid characters in full name')
+        if re.search(r"<[^>]*>", v):
+            raise ValueError("Invalid characters in full name")
         return v
 
-    @field_validator('email')
+    @field_validator("email")
     @classmethod
     def validate_email(cls, v: Optional[str]) -> Optional[str]:
-        if v and not re.match(r'^[^@]+@[^@]+\.[^@]+$', v):
-            raise ValueError('Invalid email format')
+        if v and not re.match(r"^[^@]+@[^@]+\.[^@]+$", v):
+            raise ValueError("Invalid email format")
         return v
 
 
@@ -91,28 +100,24 @@ class WorkExperience(BaseModel):
         None, description="A list of responsibilities."
     )
 
-    @field_validator('responsibilities')
+    @field_validator("responsibilities")
     @classmethod
     def validate_responsibilities(cls, v: Optional[List[str]]) -> Optional[List[str]]:
         if v:
             for resp in v:
                 if len(resp) > 1000:
-                    raise ValueError('Responsibility description too long')
+                    raise ValueError("Responsibility description too long")
         return v
 
 
 class Education(BaseModel):
     institution: str = Field(..., description="The name of the institution.")
     degree: Optional[str] = Field(None, description="The degree obtained.")
-    field_of_study: Optional[str] = Field(
-        None, description="The field of study."
-    )
+    field_of_study: Optional[str] = Field(None, description="The field of study.")
     start_date: Optional[str] = Field(
         None, description="The start date of the education."
     )
-    graduation_date: Optional[str] = Field(
-        None, description="The graduation date."
-    )
+    graduation_date: Optional[str] = Field(None, description="The graduation date.")
 
 
 class TechnicalSkills(BaseModel):
@@ -122,9 +127,7 @@ class TechnicalSkills(BaseModel):
     frameworks_libraries: Optional[List[str]] = Field(
         None, description="A list of frameworks and libraries."
     )
-    databases: Optional[List[str]] = Field(
-        None, description="A list of databases."
-    )
+    databases: Optional[List[str]] = Field(None, description="A list of databases.")
     cloud_platforms: Optional[List[str]] = Field(
         None, description="A list of cloud platforms."
     )
@@ -137,16 +140,12 @@ class Skills(BaseModel):
     technical: Optional[TechnicalSkills] = Field(
         None, description="The technical skills."
     )
-    soft_skills: Optional[List[str]] = Field(
-        None, description="A list of soft skills."
-    )
+    soft_skills: Optional[List[str]] = Field(None, description="A list of soft skills.")
 
 
 class Certification(BaseModel):
     name: str = Field(..., description="The name of the certification.")
-    issuing_organization: str = Field(
-        ..., description="The issuing organization."
-    )
+    issuing_organization: str = Field(..., description="The issuing organization.")
     date_issued: Optional[str] = Field(
         None, description="The date the certification was issued."
     )
@@ -162,11 +161,11 @@ class Project(BaseModel):
     )
     link: Optional[str] = Field(None, description="A link to the project.")
 
-    @field_validator('link')
+    @field_validator("link")
     @classmethod
     def validate_link(cls, v: Optional[str]) -> Optional[str]:
-        if v and not re.match(r'^https?://', v):
-            raise ValueError('Project link must start with http:// or https://')
+        if v and not re.match(r"^https?://", v):
+            raise ValueError("Project link must start with http:// or https://")
         return v
 
 
@@ -178,26 +177,34 @@ class Language(BaseModel):
 
 
 class Award(BaseModel):
-    title: Optional[str] = Field(None, description='e.g. One of the 100 greatest minds of the century')
+    title: Optional[str] = Field(
+        None, description="e.g. One of the 100 greatest minds of the century"
+    )
     date: Optional[str] = Field(None)
-    awarder: Optional[str] = Field(None, description='e.g. Time Magazine')
-    summary: Optional[str] = Field(None, description='e.g. Received for my work with Quantum Physics')
+    awarder: Optional[str] = Field(None, description="e.g. Time Magazine")
+    summary: Optional[str] = Field(
+        None, description="e.g. Received for my work with Quantum Physics"
+    )
 
 
 class Volunteer(BaseModel):
-    organization: Optional[str] = Field(None, description='e.g. Facebook')
-    position: Optional[str] = Field(None, description='e.g. Software Engineer')
-    url: Optional[str] = Field(None, description='e.g. http://facebook.example.com')
+    organization: Optional[str] = Field(None, description="e.g. Facebook")
+    position: Optional[str] = Field(None, description="e.g. Software Engineer")
+    url: Optional[str] = Field(None, description="e.g. http://facebook.example.com")
     startDate: Optional[str] = Field(None)
     endDate: Optional[str] = Field(None)
-    summary: Optional[str] = Field(None, description='Give an overview of your responsibilities at the company')
-    highlights: Optional[List[str]] = Field(None, description='Specify accomplishments and achievements')
+    summary: Optional[str] = Field(
+        None, description="Give an overview of your responsibilities at the company"
+    )
+    highlights: Optional[List[str]] = Field(
+        None, description="Specify accomplishments and achievements"
+    )
 
-    @field_validator('url')
+    @field_validator("url")
     @classmethod
     def validate_url(cls, v: Optional[str]) -> Optional[str]:
-        if v and not re.match(r'^https?://', v):
-            raise ValueError('Volunteer URL must start with http:// or https://')
+        if v and not re.match(r"^https?://", v):
+            raise ValueError("Volunteer URL must start with http:// or https://")
         return v
 
 
@@ -232,9 +239,7 @@ class Resume(BaseModel):
     certifications: Optional[List[Certification]] = Field(
         None, description="A list of certifications."
     )
-    projects: Optional[List[Project]] = Field(
-        None, description="A list of projects."
-    )
+    projects: Optional[List[Project]] = Field(None, description="A list of projects.")
     languages: Optional[List[Language]] = Field(
         None, description="A list of languages."
     )
@@ -250,22 +255,24 @@ def sanitize_input(text: Any) -> str:
     """Sanitize input text to prevent injection attacks."""
     if not text or not isinstance(text, str):
         raise ValueError("Invalid input: must be a non-empty string")
-    
+
     # Limit input size to prevent DoS
     if len(text) > 50000:  # 50KB limit
         raise ValueError("Input text too large")
-    
+
     # Remove potential script tags and suspicious content
-    sanitized = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.IGNORECASE | re.DOTALL)
-    sanitized = re.sub(r'javascript:', '', sanitized, flags=re.IGNORECASE)
-    sanitized = re.sub(r'on\w+\s*=', '', sanitized, flags=re.IGNORECASE)
-    
+    sanitized = re.sub(
+        r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL
+    )
+    sanitized = re.sub(r"javascript:", "", sanitized, flags=re.IGNORECASE)
+    sanitized = re.sub(r"on\w+\s*=", "", sanitized, flags=re.IGNORECASE)
+
     return sanitized.strip()
 
 
 def get_model_name() -> str:
     """Get AI model name from environment variable with fallback."""
-    return os.getenv('GEMINI_MODEL', 'gemini-2.5-flash-preview-05-20')
+    return os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-05-20")
 
 
 async def parse_resume(resume_text: str) -> dict[str, Any]:
@@ -276,7 +283,7 @@ async def parse_resume(resume_text: str) -> dict[str, Any]:
 
     Returns:
         dict: A single, well-formed JSON object.
-        
+
     Raises:
         ValueError: If input is invalid or too large.
         Exception: If AI parsing fails.
@@ -284,12 +291,12 @@ async def parse_resume(resume_text: str) -> dict[str, Any]:
     try:
         # Sanitize input
         sanitized_text = sanitize_input(resume_text)
-        
+
         # Get model name from environment
         model_name = get_model_name()
-        
+
         agent = PydanticAgent(
-            GeminiModel(model_name=model_name, provider='google-vertex'),
+            GeminiModel(model_name=model_name, provider="google-vertex"),
             instructions="You are an expert AI resume parser. Your task is to transform the unstructured resume text provided below into a single, structured, and comprehensive JSON object suitable for a modern Applicant Tracking System (ATS). Only extract information explicitly present in the text.",
         )
         result = await agent.run(sanitized_text, output_type=Resume)
@@ -303,7 +310,7 @@ async def parse_resume(resume_text: str) -> dict[str, Any]:
 def create_resume_parser_agent() -> Agent:
     """Create a secure resume parser agent with environment configuration."""
     model_name = get_model_name()
-    
+
     return Agent(
         name="resume_parser_agent",
         model=model_name,
@@ -313,5 +320,24 @@ def create_resume_parser_agent() -> Agent:
     )
 
 
+def create_orchestrator_agent() -> Agent:
+    """Create an orchestrator agent that manages the resume parsing and job posting agents."""
+    return Agent(
+        name="orchestrator_agent",
+        model=get_model_name(),
+        description="Orchestrates the resume parsing and job posting agents. Dispatches work to the appropriate agents based on user input. Handles errors and provides guidance for complex job postings.",
+        instruction=(
+            "You are an orchestrator agent. Your primary role is to manage interactions "
+            "between a user and specialized agents for resume parsing and job posting analysis. "
+            "Follow these steps:\\n"
+            "1. Greet the user and ask whether they want to work with a resume or a job posting.\\n"
+            "2. Based on the user's input, clearly state which specialized agent you will dispatch the task to (either 'parse_resume' or 'analyze_job_posting').\\n"
+            "3. Inform the user that you are now calling the selected agent.\\n"
+            "4. After the specialized agent completes its task, present the results to the user.\\n"
+            "5. If there are errors during the process (e.g., the document is unclear or the specialized agent fails), inform the user about the error and, if possible, provide guidance or ask for clarification.\\n"
+            "6. Conclude the interaction by asking if there's anything else you can help with."
+        ),
+        tools=[parse_resume, analyze_job_posting],
+    )
 # Create agent instance with secure configuration
-root_agent = create_resume_parser_agent()
+root_agent = create_orchestrator_agent()
