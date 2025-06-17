@@ -45,3 +45,8 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["co_agent_recruitment/tests"]
+
+[tool.pyrefly]
+search-path = ["co_agent_recruitment"]
+project-includes = ["co_agent_recruitment"]
+project-excludes = ["**/.[!/.]*", "**/tests"]

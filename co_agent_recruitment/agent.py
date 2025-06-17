@@ -246,7 +246,7 @@ class Resume(BaseModel):
     )
 
 
-def sanitize_input(text: str) -> str:
+def sanitize_input(text: Any) -> str:
     """Sanitize input text to prevent injection attacks."""
     if not text or not isinstance(text, str):
         raise ValueError("Invalid input: must be a non-empty string")
