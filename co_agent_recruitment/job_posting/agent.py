@@ -6,6 +6,7 @@ from pydantic_ai import Agent as PydanticAgent
 from google.adk.agents import Agent
 from datetime import datetime
 import os
+import logging # Add logging import
 
 class KeySkills(BaseModel):
     programming_languages: Optional[List[str]] = Field(
@@ -76,39 +77,75 @@ async def analyze_job_posting(job_posting: str) ->  dict[str, Any]:
     Returns:
         dict: A structured JSON object containing key information about the job posting.
     """
+    logging.info(f"Starting job posting analysis for input text: {job_posting[:200]}...") # Log input
     model_name = get_model_name()
     agent = PydanticAgent(
         GeminiModel(model_name=model_name, provider="google-vertex"),
-        instructions="You are an expert job posting parser. Your task is to transform the unstructured job posting text provided below into a single, structured, and comprehensive JSON object.",
+        instructions="You are an expert job posting parser. Your task is to transform the unstructured job posting text provided below into a single, structured, and comprehensive JSON object. Extract only the information that is explicitly present in the text. Do not make assumptions or add information that is not clearly stated.",
     )
     try:
         result = await agent.run(job_posting, output_type=JobPosting)
-        return result.output.model_dump(exclude_none=True)
+        output_data = result.output.model_dump(exclude_none=True)
+        logging.info(f"Job posting analysis successful. Output: {str(output_data)[:500]}...") # Log output
+        return output_data
     except ValidationError as e:
         # Log the error or handle it as needed
         error_messages = []
         for error in e.errors():
             error_messages.append(f"Field: {error.get('loc', 'N/A')}, Type: {error.get('type', 'N/A')}, Message: {error.get('msg', 'N/A')}")
+        logging.error(f"Pydantic validation failed during job posting analysis: {error_messages}", exc_info=True) # Log exception
         return {
             "error": "Pydantic validation failed during job posting analysis.",
             "details": error_messages
         }
     except Exception as e:
         # Catch any other unexpected errors from the agent.run call
+        logging.error(f"An unexpected error occurred during job posting analysis: {type(e).__name__} - {e}", exc_info=True) # Log exception
         return {
             "error": "An unexpected error occurred during job posting analysis.",
             "details": str(e)
         }
 
 
+# Session management callback functions for job posting agent
+async def job_posting_before_callback(callback_context) -> None:
+    """Callback executed before job posting agent runs."""
+    from google.adk.agents.callback_context import CallbackContext
+    
+    if not isinstance(callback_context, CallbackContext):
+        return
+    
+    # Initialize session state for job posting analysis
+    callback_context.state['job_posting_start_time'] = datetime.now().isoformat()
+    callback_context.state['operation_type'] = 'job_posting_analysis'
+    
+    logging.info(f"Job posting analysis session initialized for user: {callback_context._invocation_context.session.user_id}")
+
+async def job_posting_after_callback(callback_context) -> None:
+    """Callback executed after job posting agent runs."""
+    from google.adk.agents.callback_context import CallbackContext
+    
+    if not isinstance(callback_context, CallbackContext):
+        return
+    
+    # Update session state with completion info
+    callback_context.state['job_posting_end_time'] = datetime.now().isoformat()
+    callback_context.state['job_posting_completed'] = True
+    
+    logging.info(f"Job posting analysis session completed for user: {callback_context._invocation_context.session.user_id}")
+    logging.info(f"Session state: {callback_context.state}")  # Log final state for debugging
+
 def create_job_posting_agent() -> Agent:
-    """Creates and returns the job posting agent."""
+    """Creates and returns the job posting agent with session management."""
     return Agent(
         name="job_posting_agent",
         model=get_model_name(),
         description="Agent to parse job posting text and transform it into a structured JSON object.",
         instruction="You are an expert job posting parser. Your task is to transform the unstructured job posting text provided below into a single, structured, and comprehensive JSON object.",
-        tools=[analyze_job_posting]
+        tools=[analyze_job_posting],
+        output_key="job_posting_JSON",
+        before_agent_callback=job_posting_before_callback,
+        after_agent_callback=job_posting_after_callback
     )
 job_posting_agent = create_job_posting_agent()
 

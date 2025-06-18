@@ -18,7 +18,12 @@
     "adk-python Docs": {
       "url": "https://gitmcp.io/google/adk-python",
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [],
+      "alwaysAllow": [
+        "fetch_adk_python_documentation",
+        "search_adk_python_documentation",
+        "search_adk_python_code"
+      ]
     }
   }
 }
