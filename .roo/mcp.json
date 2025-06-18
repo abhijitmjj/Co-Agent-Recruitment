@@ -22,7 +22,8 @@
       "alwaysAllow": [
         "fetch_adk_python_documentation",
         "search_adk_python_documentation",
-        "search_adk_python_code"
+        "search_adk_python_code",
+        "fetch_generic_url_content"
       ]
     }
   }

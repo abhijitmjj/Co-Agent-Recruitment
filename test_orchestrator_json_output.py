@@ -9,7 +9,7 @@ from google.adk.sessions import InMemorySessionService
 from co_agent_recruitment.agent import (
     create_orchestrator_agent,
     get_or_create_session,
-    _shared_session_service
+    _shared_session_service,
 )
 
 # Sample job posting that was causing plain text output
@@ -75,36 +75,35 @@ MLOps: Kubernetes, Docker, MLflow
 Cloud: AWS, GCP
 """
 
+
 async def test_orchestrator_with_job_posting():
     """Test orchestrator agent with job posting to ensure JSON output."""
     print("=== Testing Orchestrator with Job Posting ===")
-    
+
     # Create session
     session, session_service = await get_or_create_session(
-        "co_agent_recruitment", 
-        "test_user_job", 
-        session_service=_shared_session_service
+        "co_agent_recruitment", "test_user_job", session_service=_shared_session_service
     )
-    
+
     # Create orchestrator agent
     orchestrator = create_orchestrator_agent()
-    
+
     try:
         # Test with job posting
         print("📋 Analyzing job posting...")
         result = await orchestrator.run(
             session=session,
-            user_input=f"Please analyze this job posting:\n\n{SAMPLE_JOB_POSTING}"
+            user_input=f"Please analyze this job posting:\n\n{SAMPLE_JOB_POSTING}",
         )
-        
+
         print(f"✅ Orchestrator completed successfully!")
         print(f"Result type: {type(result)}")
-        
+
         # Check if result is a string (plain text) or structured data
         if isinstance(result, str):
             print("❌ Result is plain text (this is the problem):")
             print(f"Text output: {result[:500]}...")
-            
+
             # Try to parse as JSON
             try:
                 parsed_json = json.loads(result)
@@ -117,42 +116,42 @@ async def test_orchestrator_with_job_posting():
             print("✅ Result is structured data:")
             print(json.dumps(result, indent=2, default=str))
             return result
-            
+
     except Exception as e:
         print(f"❌ Orchestrator failed: {e}")
         print(f"Error type: {type(e).__name__}")
         return None
 
+
 async def test_orchestrator_with_resume():
     """Test orchestrator agent with resume to ensure JSON output."""
     print("\n=== Testing Orchestrator with Resume ===")
-    
+
     # Create session
     session, session_service = await get_or_create_session(
-        "co_agent_recruitment", 
-        "test_user_resume", 
-        session_service=_shared_session_service
+        "co_agent_recruitment",
+        "test_user_resume",
+        session_service=_shared_session_service,
     )
-    
+
     # Create orchestrator agent
     orchestrator = create_orchestrator_agent()
-    
+
     try:
         # Test with resume
         print("📄 Parsing resume...")
         result = await orchestrator.run(
-            session=session,
-            user_input=f"Please parse this resume:\n\n{SAMPLE_RESUME}"
+            session=session, user_input=f"Please parse this resume:\n\n{SAMPLE_RESUME}"
         )
-        
+
         print(f"✅ Orchestrator completed successfully!")
         print(f"Result type: {type(result)}")
-        
+
         # Check if result is a string (plain text) or structured data
         if isinstance(result, str):
             print("❌ Result is plain text (this is the problem):")
             print(f"Text output: {result[:500]}...")
-            
+
             # Try to parse as JSON
             try:
                 parsed_json = json.loads(result)
@@ -165,17 +164,18 @@ async def test_orchestrator_with_resume():
             print("✅ Result is structured data:")
             print(json.dumps(result, indent=2, default=str))
             return result
-            
+
     except Exception as e:
         print(f"❌ Orchestrator failed: {e}")
         print(f"Error type: {type(e).__name__}")
         return None
+
 
 async def check_session_state(session, data_type):
     """Check what's stored in session state."""
     print(f"\n=== Checking Session State for {data_type} ===")
     print(f"Session state keys: {list(session.state.keys())}")
-    
+
     if data_type == "job_posting" and "job_posting_JSON" in session.state:
         print("✅ job_posting_JSON found in session state:")
         print(json.dumps(session.state["job_posting_JSON"], indent=2, default=str))
@@ -185,31 +185,39 @@ async def check_session_state(session, data_type):
     else:
         print(f"❌ No {data_type} data found in session state")
 
+
 async def main():
     """Main test function."""
     print("🧪 Testing Orchestrator Agent JSON Output")
     print("=" * 60)
-    
+
     # Test job posting
     job_result = await test_orchestrator_with_job_posting()
-    
+
     # Test resume
     resume_result = await test_orchestrator_with_resume()
-    
+
     print("\n" + "=" * 60)
     print("🏁 Testing completed!")
-    
+
     # Summary
     print("\n📊 Summary:")
     job_success = job_result is not None and isinstance(job_result, dict)
     resume_success = resume_result is not None and isinstance(resume_result, dict)
-    
-    print(f"Job posting analysis: {'✅ Returns JSON' if job_success else '❌ Returns plain text'}")
-    print(f"Resume parsing: {'✅ Returns JSON' if resume_success else '❌ Returns plain text'}")
-    
+
+    print(
+        f"Job posting analysis: {'✅ Returns JSON' if job_success else '❌ Returns plain text'}"
+    )
+    print(
+        f"Resume parsing: {'✅ Returns JSON' if resume_success else '❌ Returns plain text'}"
+    )
+
     if not job_success or not resume_success:
-        print("\n🔧 Issue identified: Orchestrator is returning plain text instead of JSON")
+        print(
+            "\n🔧 Issue identified: Orchestrator is returning plain text instead of JSON"
+        )
         print("This needs to be fixed in the agent configuration.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

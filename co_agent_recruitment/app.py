@@ -12,7 +12,7 @@ from co_agent_recruitment.agent import parse_resume, sanitize_input
 from co_agent_recruitment.json_agents import (
     parse_resume_json,
     analyze_job_posting_json,
-    process_document_json
+    process_document_json,
 )
 
 
@@ -40,7 +40,7 @@ class DocumentRequest(BaseModel):
     )
     document_type: str = Field(
         default="auto",
-        description="Type of document: 'resume', 'job_posting', or 'auto' for auto-detection"
+        description="Type of document: 'resume', 'job_posting', or 'auto' for auto-detection",
     )
 
 
@@ -130,12 +130,12 @@ async def parse_resume_endpoint(request: ResumeRequest):
     try:
         # Use the JSON-focused function to ensure proper JSON output
         result = await parse_resume_json(request.resume_text)
-        
+
         # Check if there was an error in the result
-        if isinstance(result, dict) and 'error' in result:
+        if isinstance(result, dict) and "error" in result:
             raise HTTPException(
                 status_code=500,
-                detail={"success": False, "error": result['error']},
+                detail={"success": False, "error": result["error"]},
             )
 
         return ResumeResponse(
@@ -177,12 +177,12 @@ async def analyze_job_posting_endpoint(request: JobPostingRequest):
     try:
         # Use the JSON-focused function to ensure proper JSON output
         result = await analyze_job_posting_json(request.job_posting_text)
-        
+
         # Check if there was an error in the result
-        if isinstance(result, dict) and 'error' in result:
+        if isinstance(result, dict) and "error" in result:
             raise HTTPException(
                 status_code=500,
-                detail={"success": False, "error": result['error']},
+                detail={"success": False, "error": result["error"]},
             )
 
         return JobPostingResponse(
@@ -223,21 +223,23 @@ async def process_document_endpoint(request: DocumentRequest):
     """
     try:
         # Use the unified document processing function
-        result = await process_document_json(request.document_text, request.document_type)
-        
+        result = await process_document_json(
+            request.document_text, request.document_type
+        )
+
         # Check if there was an error in the result
-        if isinstance(result, dict) and 'error' in result:
+        if isinstance(result, dict) and "error" in result:
             raise HTTPException(
                 status_code=500,
-                detail={"success": False, "error": result['error']},
+                detail={"success": False, "error": result["error"]},
             )
 
         return DocumentResponse(
-            success=result.get('success', True),
-            document_type=result.get('document_type', 'unknown'),
-            data=result.get('data', {}),
-            detection_confidence=result.get('detection_confidence'),
-            message="Document processed successfully"
+            success=result.get("success", True),
+            document_type=result.get("document_type", "unknown"),
+            data=result.get("data", {}),
+            detection_confidence=result.get("detection_confidence"),
+            message="Document processed successfully",
         )
 
     except ValueError as e:

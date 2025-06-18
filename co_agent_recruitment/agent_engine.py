@@ -3,6 +3,8 @@ from vertexai import agent_engines
 
 # Create an agent engine instance
 agent_engine = agent_engines.create()
+
+
 def get_agent_engine() -> agent_engines.AgentEngine:
     """Get the agent engine instance."""
     return agent_engine
