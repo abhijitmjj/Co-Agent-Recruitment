@@ -13,6 +13,8 @@ from google.adk.agents import Agent
 from google.adk.sessions import InMemorySessionService
 from google.adk.sessions.session import Session
 from google.adk.sessions.state import State
+from google.adk.runners import Runner
+from google.genai import types #
 from co_agent_recruitment.job_posting import analyze_job_posting, job_posting_agent
 from co_agent_recruitment.resume_parser import parse_resume, parse_resume_agent
 
@@ -134,7 +136,7 @@ async def create_session_for_user(user_id: str) -> str:
         str: New session ID
     """
     session = await _shared_session_service.create_session(
-        app_name="co_agent_recruitment", user_id=user_id, state={}
+        app_name=APP_NAME, user_id=user_id, state={}
     )
     return session.id
 
@@ -154,7 +156,7 @@ async def get_or_create_session_for_user(
     if session_id:
         # Try to get existing session
         session = await _shared_session_service.get_session(
-            app_name="co_agent_recruitment", user_id=user_id, session_id=session_id
+            app_name=APP_NAME, user_id=user_id, session_id=session_id
         )
         if session:
             return session.id
@@ -184,7 +186,7 @@ async def get_session_history(user_id: str, session_id: str):
         dict: Session state and history
     """
     session = await _shared_session_service.get_session(
-        app_name="co_agent_recruitment", user_id=user_id, session_id=session_id
+        app_name=APP_NAME, user_id=user_id, session_id=session_id
     )
 
     if not session:
@@ -210,7 +212,7 @@ async def list_user_sessions(user_id: str):
         dict: List of user sessions
     """
     response = await _shared_session_service.list_sessions(
-        app_name="co_agent_recruitment", user_id=user_id
+        app_name=APP_NAME, user_id=user_id
     )
 
     return {
@@ -228,25 +230,24 @@ async def list_user_sessions(user_id: str):
 # Create shared session service - this will persist across conversations
 _shared_session_service = InMemorySessionService()
 
+def get_shared_session_service() -> InMemorySessionService:
+    """Get the shared InMemorySessionService instance."""
+    return _shared_session_service
+
 # Create agent instance with secure configuration and session management
 root_agent = create_orchestrator_agent()
-
+APP_NAME = "co_agent_recruitment"
 # Export session management utilities
 __all__ = [
     "parse_resume",
-    "create_resume_parser_agent",
     "create_orchestrator_agent",
     "get_session_history",
+    "get_shared_session_service",
     "list_user_sessions",
     "create_session_for_user",
     "get_or_create_session_for_user",
     "update_session_state",
     "get_session_state",
     "root_agent",
-    "Resume",
-    "PersonalDetails",
-    "WorkExperience",
-    "Education",
-    "Skills",
-    "TechnicalSkills",
+    "APP_NAME",
 ]

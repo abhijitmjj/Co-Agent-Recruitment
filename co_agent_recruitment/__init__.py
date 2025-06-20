@@ -1,6 +1,6 @@
 """Co-Agent Recruitment package with ADK agent exports."""
 
-from co_agent_recruitment.agent import root_agent, parse_resume_agent
+from co_agent_recruitment.agent import root_agent, parse_resume_agent, job_posting_agent
 
 # Export the main agent for ADK discovery
 agent = root_agent
