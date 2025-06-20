@@ -7,6 +7,7 @@ from google.genai import types as genai_types
 
 from co_agent_recruitment.agent import (
     APP_NAME,
+    SESSION_ID,
     get_or_create_session_for_user,
     get_shared_session_service,
     root_agent,
@@ -112,12 +113,19 @@ async def main():
 
     # Get the runner and execute the query
     runner = get_agent_runner()
-    response = await runner.run_async(user_id=example_user_id, query=example_query)
+    response = await runner.run_async(user_id=example_user_id, query=example_query, session_id=SESSION_ID)
 
     logger.info(f"\n--- Query ---\n{example_query}")
     logger.info(f"\n--- Agent Response ---\n{response}")
 
     logger.info("\n--- Agent Engine Example Finished ---")
+    response_for_job_posting = await runner.run_async(
+        user_id=example_user_id,
+        query="Analyze this job posting - 'We are looking for a Machine Learning Engineer with expertise in Python, TensorFlow, and data analysis. The ideal candidate will have experience in deploying machine learning models in production environments.'",
+        session_id=SESSION_ID,
+    )
+    logger.info(f"\n--- Job Posting Analysis Response ---\n{response_for_job_posting}")
+    logger.info("\n--- Job Posting Analysis Finished ---")
 
 
 if __name__ == "__main__":

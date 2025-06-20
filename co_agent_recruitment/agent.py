@@ -126,7 +126,7 @@ def create_orchestrator_agent() -> Agent:
 
 
 # Session management functions for external API use
-async def create_session_for_user(user_id: str) -> str:
+async def create_session_for_user(user_id: str, session_id: str) -> str:
     """Create a new session for a user and return the session ID.
 
     Args:
@@ -136,7 +136,7 @@ async def create_session_for_user(user_id: str) -> str:
         str: New session ID
     """
     session = await _shared_session_service.create_session(
-        app_name=APP_NAME, user_id=user_id, state={}
+        app_name=APP_NAME, user_id=user_id, state={}, session_id=session_id
     )
     return session.id
 
@@ -162,7 +162,7 @@ async def get_or_create_session_for_user(
             return session.id
 
     # Create new session if not found or no session_id provided
-    return await create_session_for_user(user_id)
+    return await create_session_for_user(user_id, session_id or str(datetime.datetime.now().timestamp()))
 
 
 def update_session_state(session: Session, key: str, value: Any) -> None:
@@ -237,6 +237,7 @@ def get_shared_session_service() -> InMemorySessionService:
 # Create agent instance with secure configuration and session management
 root_agent = create_orchestrator_agent()
 APP_NAME = "co_agent_recruitment"
+SESSION_ID = "21-JUNE-2025"
 # Export session management utilities
 __all__ = [
     "parse_resume",
@@ -250,4 +251,5 @@ __all__ = [
     "get_session_state",
     "root_agent",
     "APP_NAME",
+    "SESSION_ID",
 ]
