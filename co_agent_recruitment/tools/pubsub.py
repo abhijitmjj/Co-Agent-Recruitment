@@ -27,19 +27,21 @@ import asyncio
 import json
 import logging
 import os
-from typing import Dict, List
+from typing import Dict, List, Any, Union
 import dotenv
+import dirtyjson
 
 from google.cloud import pubsub_v1
 
 # --------------------------------------------------------------------------- #
 # Logging
 # --------------------------------------------------------------------------- #
-logger = logging.getLogger(__name__)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
+logger = logging.getLogger(__name__)
 dotenv.load_dotenv()
 # --------------------------------------------------------------------------- #
 # Configuration
@@ -54,6 +56,87 @@ _topic_path = _publisher.topic_path(PROJECT_ID, TOPIC_ID)
 _subscriber = pubsub_v1.SubscriberClient()
 _sub_path = _subscriber.subscription_path(PROJECT_ID, SUB_ID)
 
+
+
+def parse_dirty_json(text_blob: str) -> Union[Dict[str, Any], List[Any], None]:
+    """
+    Robustly finds and parses a JSON-like object from a string.
+
+    This function is designed to handle strings that may contain a JSON object
+    wrapped in other text (like markdown code blocks) or JSON that doesn't
+    strictly adhere to the standard (e.g., uses single quotes).
+
+    Args:
+        text_blob: A string that is expected to contain a JSON object.
+
+    Returns:
+        A Python dictionary or list if a valid JSON object is found and parsed.
+        Returns None if no valid JSON object can be found or if parsing fails.
+    """
+    if not isinstance(text_blob, str):
+        logger.error("Input was not a string, cannot parse.")
+        return None
+
+    # --- 1. Find the start of a potential JSON object ---
+    # A JSON object can start with '{' or a JSON array with '['
+    try:
+        first_brace = text_blob.index('{')
+    except ValueError:
+        first_brace = -1
+
+    try:
+        first_bracket = text_blob.index('[')
+    except ValueError:
+        first_bracket = -1
+
+    # Determine the actual starting position of the JSON content
+    if first_brace == -1 and first_bracket == -1:
+        logger.warning("No JSON start character ('{' or '[') found in the text blob.")
+        return None
+    
+    start_index = -1
+    if first_brace != -1 and first_bracket != -1:
+        start_index = min(first_brace, first_bracket)
+    elif first_brace != -1:
+        start_index = first_brace
+    else: # first_bracket != -1
+        start_index = first_bracket
+
+    # --- 2. Find the end of the potential JSON object ---
+    # We look for the last '}' or ']'
+    try:
+        last_brace = text_blob.rindex('}')
+    except ValueError:
+        last_brace = -1
+    
+    try:
+        last_bracket = text_blob.rindex(']')
+    except ValueError:
+        last_bracket = -1
+
+    end_index = max(last_brace, last_bracket)
+
+    if end_index == -1 or end_index < start_index:
+        logger.warning("Found a JSON start, but no corresponding end character ('}' or ']') found.")
+        return None
+
+    # --- 3. Extract and parse the potential JSON string ---
+    potential_json = text_blob[start_index : end_index + 1]
+    
+    try:
+        logger.info("Attempting to parse extracted text with dirtyjson...")
+        # Use dirtyjson to parse the leniently formatted JSON
+        parsed_data = dirtyjson.loads(potential_json)
+        logger.info("Successfully parsed JSON data.")
+        return json.loads(json.dumps(parsed_data))
+    except dirtyjson.Error as e:
+        logger.error(f"dirtyjson failed to parse the string. Error: {e}")
+        logger.debug(f"Problematic string segment:\n{potential_json}")
+        return None
+    except Exception as e:
+        # Catch any other unexpected errors during parsing
+        logger.error(f"An unexpected error occurred during parsing. Error: {e}")
+        return None
 
 # --------------------------------------------------------------------------- #
 # Tools

@@ -11,6 +11,7 @@ classifiers = [
 ]
 dependencies = [
     "a2a-sdk>=0.2.7",
+    "dirtyjson>=1.0.8",
     "dotenv>=0.9.9",
     "fastapi",
     "google-adk>=1.2.1",

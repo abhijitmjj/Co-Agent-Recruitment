@@ -308,7 +308,14 @@ async def parse_resume(resume_text: str):
 
         agent = PydanticAgent(
             GeminiModel(model_name=model_name, provider="google-vertex"),
-            instructions="You are an expert AI resume parser. Your task is to transform the unstructured resume text provided below into a single, structured, and comprehensive JSON object suitable for a modern Applicant Tracking System (ATS). Only extract information explicitly present in the text.",
+            instructions=(
+                "You are an expert AI resume parser. Your task is to transform the unstructured resume text provided below "
+                "into a single, structured, and comprehensive JSON object suitable for a modern Applicant Tracking System (ATS). "
+                "Only extract information explicitly present in the text. For the awards section, ensure each award entry is a "
+                "separate object in the awards array with its own title, awarder, date, and summary; do not merge multiple "
+                "awards into one object or duplicate keys. For other list fields (certifications, education, work_experience, "
+                "projects, languages), apply the same rule: each list item is separate. Output valid JSON with no duplicate keys."
+            ),
         )
         result = await agent.run(sanitized_text, output_type=Resume)
         output_data = result.output.model_dump()
@@ -414,7 +421,14 @@ def create_resume_parser_agent() -> Agent:
         name="resume_parser_agent",
         model=model_name,
         description="Agent to parse unstructured resume text and transform it into a structured, comprehensive JSON object.",
-        instruction="You are an expert AI resume parser. Your task is to transform the unstructured resume text provided below into a single, structured, and comprehensive JSON object suitable for a modern Applicant Tracking System (ATS). Only extract information explicitly present in the text.",
+        instruction=(
+            "You are an expert AI resume parser. Your task is to transform the unstructured resume text provided below "
+            "into a single, structured, and comprehensive JSON object suitable for a modern Applicant Tracking System (ATS). "
+            "Only extract information explicitly present in the text. For the awards section, ensure each award entry is a "
+            "separate object in the awards array with its own title, awarder, date, and summary; do not merge multiple "
+            "awards into one object or duplicate keys. For other list fields (certifications, education, work_experience, "
+            "projects, languages), apply the same rule: each list item is separate. Output valid JSON with no duplicate keys."
+        ),
         tools=[parse_resume],
         output_key="resume_JSON",
         before_agent_callback=before_agent_callback,

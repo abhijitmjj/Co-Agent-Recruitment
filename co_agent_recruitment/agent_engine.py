@@ -14,6 +14,7 @@ from co_agent_recruitment.agent import (
     root_agent,
 )
 from co_agent_recruitment.tools.pubsub import emit_event
+from co_agent_recruitment.tools.pubsub import parse_dirty_json
 
 # Configure logging with a clear format
 logging.basicConfig(
@@ -123,10 +124,11 @@ async def main():
     response = await runner.run_async(
         user_id=example_user_id, query=example_query, session_id=SESSION_ID
     )
-    
-    await emit_event(name="TestEvent", payload={"response": response})
+    logger.info(f"\\n--- Response ---\\n{response}")
+    await emit_event(name="TestEvent", payload={"response": parse_dirty_json(response)})
     logger.info(f"\\n--- Query ---\\n{example_query}")
     logger.info(f"\\n--- Agent Response ---\\n{response}")
+    logger.info(f"\\n--- Emitted Test Event Payload (Structure) ---\\n{json.dumps({'response': parse_dirty_json(response)}, indent=2)}")
 
     logger.info("\\n--- Agent Engine Example Finished ---")
     response_for_job_posting = await runner.run_async(
@@ -135,11 +137,11 @@ async def main():
         session_id=SESSION_ID,
     )
     # Emit the parsed job posting data
-    await emit_event(name="JobPostingAnalysisEvent", payload={"response": response_for_job_posting})
+    await emit_event(name="JobPostingAnalysisEvent", payload={"response": parse_dirty_json(response_for_job_posting)})
 
     logger.info(f"\\n--- Job Posting Analysis Response (Original String) ---\\n{response_for_job_posting}")
     # Optionally log the structure that was actually sent to emit_event for verification
-    logger.info(f"\\n--- Emitted Job Posting Payload (Structure) ---\\n{json.dumps({'response': response_for_job_posting}, indent=2)}")
+    logger.info(f"\\n--- Emitted Job Posting Payload (Structure) ---\\n{json.dumps({'response': parse_dirty_json(response_for_job_posting)}, indent=2)}")
     logger.info("\\n--- Job Posting Analysis Finished ---")
 
 
