@@ -42,8 +42,23 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: APP_BASE_URL
+    value: http://localhost:8080 #be your backend's public base URL
+    availability:
+      - BUILD # If needed during build
+      - RUNTIME # Definitely needed at runtime
+  # Environment variable for the Next.js frontend to know the API base URL
+  - variable: NEXT_PUBLIC_API_BASE_URL
+    value: https://co-agent-recruitment-backend--gen-lang-client-0249131775.us-central1.hosted.app # Same as APP_BASE_URL
+    availability:
+      - BUILD # Crucial for Next.js to embed this into the client-side bundle
+      - RUNTIME # Also make available at runtime if needed by server-side Next.js features
   - variable: GEMINI_API_KEY
     secret: projects/605555306967/secrets/GEMINI_API_KEY
+    availability:
+      - RUNTIME
+  - variable: GOOGLE_CLOUD_PROJECT
+    value: co-agent-recruitment
     availability:
       - RUNTIME
   # Example of a non-secret environment variable:

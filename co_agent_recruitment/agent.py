@@ -226,7 +226,6 @@ async def list_user_sessions(user_id: str):
         ],
     }
 
-
 # Create shared session service - this will persist across conversations
 _shared_session_service = InMemorySessionService()
 

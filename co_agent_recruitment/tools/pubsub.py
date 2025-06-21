@@ -49,10 +49,52 @@ TOPIC_ID: str = os.getenv("TOPIC_ID", "YOUR_TOPIC_ID")
 SUB_ID: str = os.getenv("SUB_ID", "YOUR_SUBSCRIPTION_ID")
 
 _publisher = pubsub_v1.PublisherClient()
-_topic_path = _publisher.topic_path(PROJECT_ID, TOPIC_ID)
+
+# Parse TOPIC_ID to ensure it's the short name
+actual_topic_id = TOPIC_ID
+if '/' in TOPIC_ID:  # Check if it might be a full path
+    parts = TOPIC_ID.split('/')
+    if len(parts) == 4 and parts[0] == "projects" and parts[2] == "topics":
+        # Full path like projects/PROJECT_ID/topics/TOPIC_SHORT_ID
+        if parts[1] != PROJECT_ID:
+            logger.warning(
+                f"Project ID in TOPIC_ID ('{parts[1]}') does not match "
+                f"PROJECT_ID env var ('{PROJECT_ID}'). Using PROJECT_ID env var for path construction."
+            )
+        actual_topic_id = parts[3]
+        logger.info(f"Extracted short topic ID '{actual_topic_id}' from full path '{TOPIC_ID}'.")
+    else:
+        # Not the expected full path format, assume last part is the ID as a fallback
+        logger.warning(
+            f"TOPIC_ID '{TOPIC_ID}' contains '/' but is not in 'projects/PROJECT/topics/TOPIC' format. "
+            f"Using last part '{parts[-1]}' as topic ID. Please verify environment variable."
+        )
+        actual_topic_id = parts[-1]
+_topic_path = _publisher.topic_path(PROJECT_ID, actual_topic_id)
 
 _subscriber = pubsub_v1.SubscriberClient()
-_sub_path = _subscriber.subscription_path(PROJECT_ID, SUB_ID)
+
+# Parse SUB_ID to ensure it's the short name
+actual_sub_id = SUB_ID
+if '/' in SUB_ID:  # Check if it might be a full path
+    parts = SUB_ID.split('/')
+    if len(parts) == 4 and parts[0] == "projects" and parts[2] == "subscriptions":
+        # Full path like projects/PROJECT_ID/subscriptions/SUB_SHORT_ID
+        if parts[1] != PROJECT_ID:
+            logger.warning(
+                f"Project ID in SUB_ID ('{parts[1]}') does not match "
+                f"PROJECT_ID env var ('{PROJECT_ID}'). Using PROJECT_ID env var for path construction."
+            )
+        actual_sub_id = parts[3]
+        logger.info(f"Extracted short subscription ID '{actual_sub_id}' from full path '{SUB_ID}'.")
+    else:
+        # Not the expected full path format, assume last part is the ID as a fallback
+        logger.warning(
+            f"SUB_ID '{SUB_ID}' contains '/' but is not in 'projects/PROJECT/subscriptions/SUBSCRIPTION' format. "
+            f"Using last part '{parts[-1]}' as subscription ID. Please verify environment variable."
+        )
+        actual_sub_id = parts[-1]
+_sub_path = _subscriber.subscription_path(PROJECT_ID, actual_sub_id)
 
 
 # --------------------------------------------------------------------------- #

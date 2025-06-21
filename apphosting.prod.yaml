@@ -46,6 +46,16 @@ env:
     secret: projects/605555306967/secrets/GEMINI_API_KEY
     availability:
       - RUNTIME
+  - variable: GOOGLE_CLOUD_PROJECT
+    value: co-agent-recruitment
+    availability:
+      - RUNTIME
+  - variable: APP_BASE_URL
+    value: https://co-agent-recruitment-backend--gen-lang-client-0249131775.us-central1.hosted.app # This should be your backend's public base URL
+    availability:
+      - BUILD 
+      - RUNTIME 
+  
   # Example of a non-secret environment variable:
   # - variable: NODE_ENV
   #   value: production # Or dynamically set based on your needs

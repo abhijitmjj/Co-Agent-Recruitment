@@ -22,14 +22,14 @@ import Link from 'next/link';
 
 export default function CandidatePage() {
   const { toast } = useToast();
-  const { addCandidate, jobs } = useAppContext(); // Removed candidates from context as it's no longer used for "currentProfile"
+  const { addCandidate, jobs } = useAppContext();
 
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [aiSummary, setAiSummary] = useState<string>(''); // Retained for potential future use if summary is displayed before full submission
+  const [aiSummary, setAiSummary] = useState<string>('');
   const [submittedProfile, setSubmittedProfile] = useState<Candidate | null>(null);
   const [potentialMatches, setPotentialMatches] = useState<Awaited<ReturnType<typeof performMatchmakingAction>>>([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
+  const [isLoadingProcessingDocument, setIsLoadingProcessingDocument] = useState(false); // New loading state
 
   const form = useForm<CandidateProfileInput>({
     resolver: zodResolver(CandidateProfileSchema),
@@ -43,13 +43,12 @@ export default function CandidatePage() {
 
   const onSubmit: SubmitHandler<CandidateProfileInput> = async (data) => {
     setIsLoadingSummary(true);
-    setAiSummary(''); // Clear previous AI summary
+    setAiSummary('');
     const summaryResult = await summarizeCandidateProfileAction({ profileText: data.experienceSummary });
     setIsLoadingSummary(false);
 
-    let finalSummary = data.experienceSummary.substring(0,200) + "..."; // Fallback summary
+    let finalSummary = data.experienceSummary.substring(0,200) + "...";
     if (summaryResult.success && summaryResult.data) {
-      // setAiSummary(summaryResult.data); // This local state isn't directly displayed anymore, but kept if needed
       finalSummary = summaryResult.data;
       toast({ title: 'Profile Summary Generated', description: 'AI has summarized your experience.' });
     } else {
@@ -58,10 +57,45 @@ export default function CandidatePage() {
     
     const newCandidateId = `cand_${Date.now()}`;
     const newCandidate : Candidate = { ...data, id: newCandidateId, aiSummary: finalSummary };
-    addCandidate(newCandidate); // Adds to global context, but page UI relies on submittedProfile
-    setSubmittedProfile(newCandidate); // This is the key state for displaying "their" profile
+    addCandidate(newCandidate);
+    setSubmittedProfile(newCandidate);
     toast({ title: 'Profile Submitted', description: 'Your profile has been successfully submitted.' });
-    // form.reset(); // Commented out to allow user to see their submitted data if they want to tweak and resubmit, or clear if desired
+
+    // Call /process-document endpoint
+    setIsLoadingProcessingDocument(true);
+    try {
+      const document_text = `Full Name: ${newCandidate.fullName}\nSkills: ${newCandidate.skills}\nExperience Summary: ${newCandidate.experienceSummary}\nLocation Preference: ${newCandidate.locationPreference}`;
+      const processDocumentRequest = {
+        text: document_text, // Using the concatenated string with all details
+        user_id: newCandidateId,
+        session_id: "123"
+      };
+      // Use environment variable for API URL
+      const apiBaseUrl = process.env.APP_BASE_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiBaseUrl}/orchestrator`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': 'application/json',
+        },
+        body: JSON.stringify(processDocumentRequest),
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log('Successfully processed document:', responseData);
+        toast({ title: 'Document Processed', description: 'Profile processed by backend for further analysis.' });
+        // You might want to do something with responseData here, e.g., store it or update state
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to process document:', errorData);
+        toast({ title: 'Document Processing Error', description: errorData.detail || 'Could not process document with backend.', variant: 'destructive' });
+      }
+    } catch (error) {
+      console.error('Error calling /process-document:', error);
+      toast({ title: 'API Connection Error', description: 'Could not connect to document processing service.', variant: 'destructive' });
+    }
+    setIsLoadingProcessingDocument(false);
 
     // Perform matchmaking
     setIsLoadingMatches(true);
@@ -139,8 +173,13 @@ export default function CandidatePage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" size="lg" className="w-full bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105" disabled={form.formState.isSubmitting || isLoadingSummary}>
-                  {(form.formState.isSubmitting || isLoadingSummary) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  className="w-full bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105" 
+                  disabled={form.formState.isSubmitting || isLoadingSummary || isLoadingProcessingDocument || isLoadingMatches}
+                >
+                  {(form.formState.isSubmitting || isLoadingSummary || isLoadingProcessingDocument || isLoadingMatches) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                   Submit Profile & Find Matches
                 </Button>
               </form>

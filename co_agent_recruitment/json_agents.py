@@ -7,7 +7,7 @@ import logging
 from typing import Any, Dict
 from co_agent_recruitment.agent import parse_resume, sanitize_input
 from co_agent_recruitment.job_posting.agent import analyze_job_posting
-
+from co_agent_recruitment.agent_engine import agent_runner, get_agent_runner
 
 async def parse_resume_json(resume_text: str) -> Dict[str, Any]:
     """
@@ -92,7 +92,35 @@ async def analyze_job_posting_json(job_posting_text: str) -> Dict[str, Any]:
             "error_type": type(e).__name__,
             "message": str(e),
         }
+    
+async def orchestratorAgentRunner(user_id: str, session_id: str, document_text: str) -> Dict[str, Any]:
+    """
+    Call the Orchestrator Agent Runner to process a user's query.
 
+    Args:
+        user_id (str): The identifier for the user.
+        session_id (str): The session ID for the interaction.
+        query (str): The user's query for the agent.
+
+    Returns:
+        Dict[str, Any]: The agent's final response as structured JSON.
+    """
+
+
+    try:
+        # Get the runner and execute the query
+        runner = get_agent_runner()
+        response = await runner.run_async(
+            user_id=user_id, session_id=session_id, query=document_text
+        )
+        return response
+    except Exception as e:
+        logging.error(f"Orchestrator Agent Runner failed: {e}")
+        return {
+            "error": "Orchestrator Agent Runner failed",
+            "error_type": type(e).__name__,
+            "message": str(e),
+        }
 
 async def process_document_json(
     document_text: str, document_type: str = "auto"
