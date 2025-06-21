@@ -8,7 +8,16 @@ from pydantic import BaseModel, Field, field_validator
 from pydantic_ai import Agent as PydanticAgent
 from pydantic_ai.models.gemini import GeminiModel
 from google.adk.agents import Agent
+import dotenv
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+dotenv.load_dotenv()
 
 class Location(BaseModel):
     address: Optional[str] = Field(
@@ -271,7 +280,7 @@ def sanitize_input(text: Any) -> str:
 
 def get_model_name() -> str:
     """Get AI model name from environment variable with fallback."""
-    return os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-05-20")
+    return os.getenv("MODEL_ID", "gemini-2.5-flash")
 
 
 async def parse_resume(resume_text: str):
@@ -287,7 +296,7 @@ async def parse_resume(resume_text: str):
         ValueError: If input is invalid or too large.
         Exception: If AI parsing fails.
     """
-    logging.info(
+    logger.info(
         f"Starting resume parsing for input text: {resume_text[:200]}..."
     )  # Log input
     try:
@@ -319,13 +328,13 @@ async def parse_resume(resume_text: str):
             "operation_status": "success",
         }
 
-        logging.info(
+        logger.info(
             f"Resume parsing successful. Output: {str(output_data)[:500]}..."
         )  # Log output
         return final_output
     except Exception as e:
         # Log error but don't expose internal details
-        logging.error(
+        logger.error(
             f"Resume parsing failed: {type(e).__name__} - {e}", exc_info=True
         )  # Log exception
         print(f"Resume parsing failed: {type(e).__name__}")
@@ -359,7 +368,7 @@ async def before_agent_callback(callback_context) -> None:
             datetime.datetime.now().isoformat()
         )
         callback_context.state["operation_count"] = 0
-        logging.info(
+        logger.info(
             f"New conversation started for user: {callback_context._invocation_context.session.user_id}"
         )
 
@@ -373,7 +382,7 @@ async def before_agent_callback(callback_context) -> None:
         callback_context._invocation_context.session.id
     )
 
-    logging.info(
+    logger.info(
         f"Operation #{callback_context.state['operation_count']} started for user: {callback_context._invocation_context.session.user_id} on session {callback_context.state['session_id']}"
     )
 
@@ -392,7 +401,7 @@ async def after_agent_callback(callback_context) -> None:
         callback_context._invocation_context.session.id
     )
 
-    logging.info(
+    logger.info(
         f"Operation #{callback_context.state.get('operation_count', 0)} completed for user: {callback_context._invocation_context.session.user_id} on session {callback_context.state['session_id']}"
     )
 

@@ -12,11 +12,19 @@ from co_agent_recruitment.resume_parser import (
     parse_resume_agent,
     sanitize_input,
 )
-
+import dotenv
+# Load environment variables from .env file
+dotenv.load_dotenv()
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 def get_model_name() -> str:
     """Get AI model name from environment variable with fallback."""
-    return os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-05-20")
+    return os.getenv("MODEL_ID", "gemini-2.5-flash")
 
 
 async def orchestrator_before_callback(callback_context) -> None:
@@ -32,7 +40,7 @@ async def orchestrator_before_callback(callback_context) -> None:
             datetime.datetime.now().isoformat()
         )
         callback_context.state["interaction_count"] = 0
-        logging.info(
+        logger.info(
             f"New orchestrator conversation started for user: {callback_context._invocation_context.session.user_id}"
         )
 
@@ -53,7 +61,7 @@ async def orchestrator_before_callback(callback_context) -> None:
         "interaction_start_time": callback_context.state["last_interaction_start"],
     }
 
-    logging.info(
+    logger.info(
         f"Orchestrator interaction #{callback_context.state['interaction_count']} started for user: {callback_context._invocation_context.session.user_id}"
     )
 
@@ -82,7 +90,7 @@ async def orchestrator_after_callback(callback_context) -> None:
             callback_context._invocation_context.session.id
         )
 
-    logging.info(
+    logger.info(
         f"Orchestrator interaction #{callback_context.state.get('interaction_count', 0)} completed for user: {callback_context._invocation_context.session.user_id} on session {callback_context._invocation_context.session.id}"
     )
 

@@ -1,36 +1,32 @@
-import dotenv
-import os
-import re
-import logging
-import json, asyncio
-from google.cloud import pubsub_v1
-dotenv.load_dotenv()
+"""
+Deprecated shim for backward compatibility.
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+`co_agent_recruitment.event_publisher.emit_event` has moved to
+`co_agent_recruitment.tools.pubsub.emit_event`.
+
+Importing from this module will continue to work but will raise a
+`DeprecationWarning`.  New code should import from the tools package:
+
+    from co_agent_recruitment.tools.pubsub import emit_event
+"""
+
+from __future__ import annotations
+
+import warnings
+from typing import Dict, Any
+
+from co_agent_recruitment.tools.pubsub import emit_event as _emit_event
 
 
-PROJECT_ID = os.getenv("PROJECT_ID", "YOUR_PROJECT_ID")
-TOPIC_ID = os.getenv("TOPIC_ID", "YOUR_TOPIC_ID")
-SUB_ID = os.getenv("SUB_ID")
+__all__ = ["emit_event"]
 
-publisher = pubsub_v1.PublisherClient()
-topic_path = publisher.topic_path(PROJECT_ID, TOPIC_ID)
 
-async def emit_event(name: str, payload: dict):
-    """Generic helper you can call from anywhere in your app."""
-    logger.info(f"Emitting event '{name}' with payload: {payload}")
-    data = json.dumps(payload).encode()          # Pub/Sub wants bytes
-    # Add small headers as message attributes
-    future = publisher.publish(
-        topic_path,
-        data=data,
-        event=name,                              # custom attribute
-        content_type="application/json"
+def emit_event(name: str, payload: Dict[str, Any]):
+    """Forwarder that calls the new implementation in tools.pubsub."""
+    warnings.warn(
+        "co_agent_recruitment.event_publisher is deprecated; "
+        "use co_agent_recruitment.tools.pubsub instead.",
+        DeprecationWarning,
+        stacklevel=2,
     )
-    # Optionally await the server ack:
-    message_id = await asyncio.wrap_future(future)
-    logger.info(f"Event '{name}' published with message ID: {message_id}")
+    return _emit_event(name, payload)

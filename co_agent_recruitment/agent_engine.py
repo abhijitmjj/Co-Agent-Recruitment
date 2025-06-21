@@ -2,10 +2,10 @@ import asyncio
 import logging
 import json  # Added import
 from typing import Optional
+import dotenv
 
 from google.adk.runners import Runner
 from google.genai import types as genai_types
-import re
 from co_agent_recruitment.agent import (
     APP_NAME,
     SESSION_ID,
@@ -13,7 +13,7 @@ from co_agent_recruitment.agent import (
     get_shared_session_service,
     root_agent,
 )
-from co_agent_recruitment.event_publisher import emit_event
+from co_agent_recruitment.tools.pubsub import emit_event
 
 # Configure logging with a clear format
 logging.basicConfig(
@@ -22,7 +22,9 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
+# load environment variables
 
+dotenv.load_dotenv()
 class OrchestratorAgentRunner:
     """A runner to interact with the orchestrator agent and manage sessions."""
 

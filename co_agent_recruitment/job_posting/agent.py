@@ -7,6 +7,17 @@ from datetime import datetime
 import os
 import logging  # Add logging import
 
+import dotenv
+# Load environment variables from .env file
+dotenv.load_dotenv()
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+# --------------------------------------------------------------------------- #
+
 
 class KeySkills(BaseModel):
     programming_languages: Optional[List[str]] = Field(
@@ -114,7 +125,7 @@ class JobPosting(BaseModel):
 
 def get_model_name() -> str:
     """Get AI model name from environment variable with fallback."""
-    return os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-05-20")
+    return os.getenv("MODEL_ID", "gemini-2.5-flash")
 
 
 async def analyze_job_posting(job_posting: str):
@@ -126,7 +137,7 @@ async def analyze_job_posting(job_posting: str):
     Returns:
         dict: A structured JSON object containing key information about the job posting with session information.
     """
-    logging.info(
+    logger.info(
         f"Starting job posting analysis for input text: {job_posting[:200]}..."
     )  # Log input
     model_name = get_model_name()
@@ -153,7 +164,7 @@ async def analyze_job_posting(job_posting: str):
             "operation_status": "success",
         }
 
-        logging.info(
+        logger.info(
             f"Job posting analysis successful. Output: {str(output_data)[:500]}..."
         )  # Log output
         return final_output
@@ -164,7 +175,7 @@ async def analyze_job_posting(job_posting: str):
             error_messages.append(
                 f"Field: {error.get('loc', 'N/A')}, Type: {error.get('type', 'N/A')}, Message: {error.get('msg', 'N/A')}"
             )
-        logging.error(
+        logger.error(
             f"Pydantic validation failed during job posting analysis: {error_messages}",
             exc_info=True,
         )  # Log exception
@@ -185,7 +196,7 @@ async def analyze_job_posting(job_posting: str):
         }
     except Exception as e:
         # Catch any other unexpected errors from the agent.run call
-        logging.error(
+        logger.error(
             f"An unexpected error occurred during job posting analysis: {type(e).__name__} - {e}",
             exc_info=True,
         )  # Log exception
@@ -218,7 +229,7 @@ async def job_posting_before_callback(callback_context) -> None:
     callback_context.state["job_posting_start_time"] = datetime.now().isoformat()
     callback_context.state["operation_type"] = "job_posting_analysis"
 
-    logging.info(
+    logger.info(
         f"Job posting analysis session initialized for user: {callback_context._invocation_context.session.user_id}"
     )
 
@@ -234,10 +245,10 @@ async def job_posting_after_callback(callback_context) -> None:
     callback_context.state["job_posting_end_time"] = datetime.now().isoformat()
     callback_context.state["job_posting_completed"] = True
 
-    logging.info(
+    logger.info(
         f"Job posting analysis session completed for user: {callback_context._invocation_context.session.user_id}"
     )
-    logging.info(
+    logger.info(
         f"Session state: {callback_context.state}"
     )  # Log final state for debugging
 
