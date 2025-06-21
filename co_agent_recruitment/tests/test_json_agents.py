@@ -64,7 +64,7 @@ async def test_parse_resume_json():
     try:
         result = await parse_resume_json(SAMPLE_RESUME)
 
-        print(f"✅ Function completed successfully")
+        print("✅ Function completed successfully")
         print(f"Result type: {type(result)}")
         print(f"Is dict: {isinstance(result, dict)}")
 
@@ -73,7 +73,7 @@ async def test_parse_resume_json():
                 print(f"❌ Error in result: {result['error']}")
                 return False
             else:
-                print(f"✅ Valid JSON structure")
+                print("✅ Valid JSON structure")
                 print(f"Keys: {list(result.keys())}")
                 print("\n📄 Resume JSON:")
                 print(json.dumps(result, indent=2, default=str))
@@ -94,7 +94,7 @@ async def test_analyze_job_posting_json():
     try:
         result = await analyze_job_posting_json(SAMPLE_JOB_POSTING)
 
-        print(f"✅ Function completed successfully")
+        print("✅ Function completed successfully")
         print(f"Result type: {type(result)}")
         print(f"Is dict: {isinstance(result, dict)}")
 
@@ -103,7 +103,7 @@ async def test_analyze_job_posting_json():
                 print(f"❌ Error in result: {result['error']}")
                 return False
             else:
-                print(f"✅ Valid JSON structure")
+                print("✅ Valid JSON structure")
                 print(f"Keys: {list(result.keys())}")
                 print("\n📋 Job Posting JSON:")
                 print(json.dumps(result, indent=2, default=str))
@@ -125,7 +125,7 @@ async def test_process_document_json():
     print("\n📄 Testing with explicit resume type...")
     try:
         result = await process_document_json(SAMPLE_RESUME, "resume")
-        print(f"✅ Resume processing successful")
+        print("✅ Resume processing successful")
         print(f"Document type: {result.get('document_type')}")
         print(f"Success: {result.get('success')}")
 
@@ -141,7 +141,7 @@ async def test_process_document_json():
     print("\n📋 Testing with explicit job posting type...")
     try:
         result = await process_document_json(SAMPLE_JOB_POSTING, "job_posting")
-        print(f"✅ Job posting processing successful")
+        print("✅ Job posting processing successful")
         print(f"Document type: {result.get('document_type')}")
         print(f"Success: {result.get('success')}")
 
@@ -157,7 +157,7 @@ async def test_process_document_json():
     print("\n🔍 Testing with auto-detection...")
     try:
         result = await process_document_json(SAMPLE_JOB_POSTING, "auto")
-        print(f"✅ Auto-detection successful")
+        print("✅ Auto-detection successful")
         print(f"Detected type: {result.get('document_type')}")
         print(f"Detection confidence: {result.get('detection_confidence')}")
         print(f"Success: {result.get('success')}")

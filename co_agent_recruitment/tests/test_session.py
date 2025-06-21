@@ -5,10 +5,13 @@ Test script for session management functionality
 
 import asyncio
 import sys
-import os
 import logging
-
-
+from google.adk.runners import InMemoryRunner
+from google.adk.agents.run_config import RunConfig
+from google.genai import types
+from co_agent_recruitment.agent import (
+    root_agent,
+)
 # Configure logging with datetime and fancy INFO formatting
 class FancyFormatter(logging.Formatter):
     def format(self, record):
@@ -32,19 +35,10 @@ logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 logger.propagate = False
 # Add the co_agent_recruitment directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "co_agent_recruitment"))
+# sys.path.insert(0, os.path.join(os.path.dirname(__file__), "co_agent_recruitment"))
 
-from co_agent_recruitment.agent import (
-    list_user_sessions,
-    get_session_history,
-    create_session_for_user,
-    parse_resume,
-    root_agent,
-    _shared_session_service,
-)
-from google.adk.runners import InMemoryRunner
-from google.adk.agents.run_config import RunConfig
-from google.genai import types
+
+
 
 
 async def test_session_management():
@@ -115,7 +109,7 @@ async def test_session_management():
                 if event.author == root_agent.name:
                     final_response_parts.append(event.content.parts[0].text)
 
-        print(f"✅ Resume parsed successfully with agent")
+        print("✅ Resume parsed successfully with agent")
 
         # Test 3: Get session directly from runner's session service
         print("\nTest 3: Getting session from runner's session service...")
@@ -123,7 +117,7 @@ async def test_session_management():
             app_name=app_name, user_id=user_id, session_id=session_id
         )
         if retrieved_session:
-            print(f"✅ Session retrieved successfully")
+            print("✅ Session retrieved successfully")
             print(f"   - Session ID: {retrieved_session.id}")
             print(f"   - User ID: {retrieved_session.user_id}")
             print(f"   - State keys: {list(retrieved_session.state.keys())}")
@@ -164,7 +158,7 @@ async def test_session_management():
                 if event.author == root_agent.name:
                     final_response_parts2.append(event.content.parts[0].text)
 
-        print(f"✅ Second interaction completed in same session")
+        print("✅ Second interaction completed in same session")
 
         # Test 6: Check session state after multiple interactions
         print("\nTest 6: Checking session state after multiple interactions...")

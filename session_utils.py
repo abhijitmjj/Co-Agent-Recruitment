@@ -88,7 +88,7 @@ class SessionManager:
             print(f"❌ Session {session_id} not found for user {user_id}")
             return
 
-        print(f"📊 Session Summary")
+        print("📊 Session Summary")
         print(f"   Session ID: {info['session_id']}")
         print(f"   User ID: {info['user_id']}")
         print(f"   Interactions: {info['interaction_count']}")

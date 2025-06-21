@@ -3,7 +3,6 @@ JSON-focused agents that return structured data without conversational formattin
 These agents are designed specifically for API usage where JSON output is required.
 """
 
-import asyncio
 import logging
 from typing import Any, Dict
 from co_agent_recruitment.agent import parse_resume, sanitize_input

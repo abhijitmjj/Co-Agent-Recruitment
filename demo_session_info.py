@@ -4,7 +4,6 @@ Demo script to show session information in action
 """
 
 import asyncio
-import json
 from co_agent_recruitment.agent import root_agent
 from google.adk.runners import InMemoryRunner
 from google.adk.agents.run_config import RunConfig
@@ -26,7 +25,7 @@ async def demo_session_visibility():
         app_name=app_name, user_id=user_id
     )
 
-    print(f"📋 Initial Session Info:")
+    print("📋 Initial Session Info:")
     print(f"   Session ID: {session.id}")
     print(f"   User ID: {session.user_id}")
     print(f"   App Name: {session.app_name}")
@@ -76,7 +75,7 @@ async def demo_session_visibility():
         app_name=app_name, user_id=user_id, session_id=session.id
     )
 
-    print(f"📊 Session State After First Interaction:")
+    print("📊 Session State After First Interaction:")
     if updated_session:
         print(f"   Session ID: {updated_session.id}")
         print(
@@ -134,7 +133,7 @@ async def demo_session_visibility():
         app_name=app_name, user_id=user_id, session_id=session.id
     )
 
-    print(f"📊 Final Session State After Two Interactions:")
+    print("📊 Final Session State After Two Interactions:")
     if final_session:
         print(f"   Session ID: {final_session.id}")
         print(

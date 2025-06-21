@@ -3,8 +3,6 @@ Standalone FastAPI server for testing the JSON agents.
 This bypasses any environment issues with the main app.
 """
 
-import asyncio
-import json
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -177,7 +175,7 @@ async def analyze_job_posting_endpoint(request: JobPostingRequest):
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=500,
             detail={"success": False, "error": "Failed to analyze job posting"},
@@ -204,7 +202,7 @@ async def parse_resume_endpoint(request: ResumeRequest):
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=500,
             detail={"success": False, "error": "Failed to parse resume"},

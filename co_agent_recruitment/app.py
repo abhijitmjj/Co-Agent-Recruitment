@@ -8,7 +8,7 @@ import sys
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-from co_agent_recruitment.agent import parse_resume, sanitize_input
+from co_agent_recruitment.agent import parse_resume
 from co_agent_recruitment.json_agents import (
     parse_resume_json,
     analyze_job_posting_json,
@@ -149,7 +149,7 @@ async def parse_resume_endpoint(request: ResumeRequest):
         )
     except HTTPException:
         raise  # Re-raise HTTP exceptions
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=500,
             detail={"success": False, "error": "Failed to parse resume"},
@@ -196,7 +196,7 @@ async def analyze_job_posting_endpoint(request: JobPostingRequest):
         )
     except HTTPException:
         raise  # Re-raise HTTP exceptions
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=500,
             detail={"success": False, "error": "Failed to analyze job posting"},
@@ -249,7 +249,7 @@ async def process_document_endpoint(request: DocumentRequest):
         )
     except HTTPException:
         raise  # Re-raise HTTP exceptions
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=500,
             detail={"success": False, "error": "Failed to process document"},

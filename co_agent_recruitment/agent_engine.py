@@ -1,10 +1,11 @@
 import asyncio
 import logging
+import json  # Added import
 from typing import Optional
 
 from google.adk.runners import Runner
 from google.genai import types as genai_types
-
+import re
 from co_agent_recruitment.agent import (
     APP_NAME,
     SESSION_ID,
@@ -12,6 +13,7 @@ from co_agent_recruitment.agent import (
     get_shared_session_service,
     root_agent,
 )
+from co_agent_recruitment.event_publisher import emit_event
 
 # Configure logging with a clear format
 logging.basicConfig(
@@ -20,7 +22,6 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
-
 
 class OrchestratorAgentRunner:
     """A runner to interact with the orchestrator agent and manage sessions."""
@@ -59,7 +60,9 @@ class OrchestratorAgentRunner:
             logger.info(f"Using session '{active_session_id}' for user '{user_id}'.")
 
             # Prepare the user's message in ADK format
-            content = genai_types.Content(role="user", parts=[genai_types.Part(text=query)])
+            content = genai_types.Content(
+                role="user", parts=[genai_types.Part(text=query)]
+            )
 
             final_response_text = "Agent did not produce a final response."  # Default
 
@@ -90,7 +93,9 @@ class OrchestratorAgentRunner:
             return final_response_text
 
         except Exception as e:
-            logger.error(f"An error occurred while running the agent: {e}", exc_info=True)
+            logger.error(
+                f"An error occurred while running the agent: {e}", exc_info=True
+            )
             return f"An error occurred: {e}"
 
 
@@ -113,19 +118,27 @@ async def main():
 
     # Get the runner and execute the query
     runner = get_agent_runner()
-    response = await runner.run_async(user_id=example_user_id, query=example_query, session_id=SESSION_ID)
+    response = await runner.run_async(
+        user_id=example_user_id, query=example_query, session_id=SESSION_ID
+    )
+    
+    await emit_event(name="TestEvent", payload={"response": response})
+    logger.info(f"\\n--- Query ---\\n{example_query}")
+    logger.info(f"\\n--- Agent Response ---\\n{response}")
 
-    logger.info(f"\n--- Query ---\n{example_query}")
-    logger.info(f"\n--- Agent Response ---\n{response}")
-
-    logger.info("\n--- Agent Engine Example Finished ---")
+    logger.info("\\n--- Agent Engine Example Finished ---")
     response_for_job_posting = await runner.run_async(
         user_id=example_user_id,
         query="Analyze this job posting - 'We are looking for a Machine Learning Engineer with expertise in Python, TensorFlow, and data analysis. The ideal candidate will have experience in deploying machine learning models in production environments.'",
         session_id=SESSION_ID,
     )
-    logger.info(f"\n--- Job Posting Analysis Response ---\n{response_for_job_posting}")
-    logger.info("\n--- Job Posting Analysis Finished ---")
+    # Emit the parsed job posting data
+    await emit_event(name="JobPostingAnalysisEvent", payload={"response": response_for_job_posting})
+
+    logger.info(f"\\n--- Job Posting Analysis Response (Original String) ---\\n{response_for_job_posting}")
+    # Optionally log the structure that was actually sent to emit_event for verification
+    logger.info(f"\\n--- Emitted Job Posting Payload (Structure) ---\\n{json.dumps({'response': response_for_job_posting}, indent=2)}")
+    logger.info("\\n--- Job Posting Analysis Finished ---")
 
 
 if __name__ == "__main__":

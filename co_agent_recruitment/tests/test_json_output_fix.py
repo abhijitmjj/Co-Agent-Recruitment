@@ -49,7 +49,7 @@ async def test_direct_function_calls():
     print("📋 Testing analyze_job_posting function...")
     try:
         job_result = await analyze_job_posting(PROBLEMATIC_JOB_POSTING)
-        print(f"✅ Job posting analysis successful!")
+        print("✅ Job posting analysis successful!")
         print(f"Result type: {type(job_result)}")
 
         if isinstance(job_result, dict):
@@ -169,7 +169,7 @@ async def main():
     direct_result = await test_direct_function_calls()
 
     # Test JSON wrappers
-    wrapper_result = await test_json_wrappers()
+    await test_json_wrappers()
 
     print("\n" + "=" * 60)
     print("🏁 Testing completed!")

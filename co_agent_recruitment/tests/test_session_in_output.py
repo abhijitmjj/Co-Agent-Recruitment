@@ -99,7 +99,7 @@ async def test_session_in_outputs():
         app_name=app_name, user_id=user_id, session_id=session.id
     )
 
-    print(f"\n📊 Session State After Orchestrator Call:")
+    print("\n📊 Session State After Orchestrator Call:")
     if updated_session:
         print(f"   Session ID: {updated_session.id}")
         print(

@@ -1,6 +1,5 @@
 from typing import Any
 import datetime
-import asyncio
 import os
 import re
 import logging  # Add logging import
@@ -9,10 +8,6 @@ from pydantic import BaseModel, Field, field_validator
 from pydantic_ai import Agent as PydanticAgent
 from pydantic_ai.models.gemini import GeminiModel
 from google.adk.agents import Agent
-from google.adk.sessions import InMemorySessionService
-from google.adk.sessions.session import Session
-from google.adk.sessions.state import State
-from co_agent_recruitment.job_posting import analyze_job_posting, job_posting_agent
 
 
 class Location(BaseModel):
@@ -349,6 +344,7 @@ async def parse_resume(resume_text: str):
             "operation_status": "error",
         }
 
+
 # Session management callback functions
 async def before_agent_callback(callback_context) -> None:
     """Callback executed before agent runs - handles session state initialization."""
@@ -415,5 +411,6 @@ def create_resume_parser_agent() -> Agent:
         before_agent_callback=before_agent_callback,
         after_agent_callback=after_agent_callback,
     )
+
 
 parse_resume_agent = create_resume_parser_agent()

@@ -7,9 +7,8 @@ from co_agent_recruitment.agent import (
     sanitize_input,
     parse_resume,
     get_model_name,
-    PersonalDetails,
-    Link,
 )
+from co_agent_recruitment.resume_parser.agent import PersonalDetails, Link
 
 
 class TestInputSanitization:

@@ -1,6 +1,5 @@
-from typing import Any
 from pydantic_ai.models.gemini import GeminiModel
-from typing import List, Dict, Optional, Union  # Added Union
+from typing import List, Optional  # Added Union
 from pydantic import BaseModel, Field, ValidationError
 from pydantic_ai import Agent as PydanticAgent
 from google.adk.agents import Agent

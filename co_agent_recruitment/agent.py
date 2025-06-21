@@ -1,29 +1,22 @@
-
 from typing import Any
 import datetime
-import asyncio
 import os
-import re
 import logging  # Add logging import
-from typing import List, Literal, Optional
-from pydantic import BaseModel, Field, field_validator
-from pydantic_ai import Agent as PydanticAgent
-from pydantic_ai.models.gemini import GeminiModel
+from typing import Optional
 from google.adk.agents import Agent
 from google.adk.sessions import InMemorySessionService
 from google.adk.sessions.session import Session
-from google.adk.sessions.state import State
-from google.adk.runners import Runner
-from google.genai import types #
-from co_agent_recruitment.job_posting import analyze_job_posting, job_posting_agent
-from co_agent_recruitment.resume_parser import parse_resume, parse_resume_agent
-
+from co_agent_recruitment.job_posting import job_posting_agent
+from co_agent_recruitment.resume_parser import (
+    parse_resume,
+    parse_resume_agent,
+    sanitize_input,
+)
 
 
 def get_model_name() -> str:
     """Get AI model name from environment variable with fallback."""
     return os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-05-20")
-
 
 
 async def orchestrator_before_callback(callback_context) -> None:
@@ -94,9 +87,6 @@ async def orchestrator_after_callback(callback_context) -> None:
     )
 
 
-
-
-
 def create_orchestrator_agent() -> Agent:
     """Create an orchestrator agent that manages the resume parsing and job posting agents with session management."""
     return Agent(
@@ -162,7 +152,9 @@ async def get_or_create_session_for_user(
             return session.id
 
     # Create new session if not found or no session_id provided
-    return await create_session_for_user(user_id, session_id or str(datetime.datetime.now().timestamp()))
+    return await create_session_for_user(
+        user_id, session_id or str(datetime.datetime.now().timestamp())
+    )
 
 
 def update_session_state(session: Session, key: str, value: Any) -> None:
@@ -230,9 +222,11 @@ async def list_user_sessions(user_id: str):
 # Create shared session service - this will persist across conversations
 _shared_session_service = InMemorySessionService()
 
+
 def get_shared_session_service() -> InMemorySessionService:
     """Get the shared InMemorySessionService instance."""
     return _shared_session_service
+
 
 # Create agent instance with secure configuration and session management
 root_agent = create_orchestrator_agent()
@@ -252,4 +246,5 @@ __all__ = [
     "root_agent",
     "APP_NAME",
     "SESSION_ID",
+    "sanitize_input",
 ]
