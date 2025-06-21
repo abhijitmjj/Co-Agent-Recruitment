@@ -13,14 +13,15 @@ from co_agent_recruitment.resume_parser import (
     sanitize_input,
 )
 import dotenv
+
 # Load environment variables from .env file
 dotenv.load_dotenv()
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
 
 def get_model_name() -> str:
     """Get AI model name from environment variable with fallback."""

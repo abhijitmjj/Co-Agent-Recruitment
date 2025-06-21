@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 # load environment variables
 
 dotenv.load_dotenv()
+
+
 class OrchestratorAgentRunner:
     """A runner to interact with the orchestrator agent and manage sessions."""
 
@@ -117,18 +119,72 @@ async def main():
 
     # Example user and query
     example_user_id = "test_user_001"
-    example_query = "parse this - 'Highly analytical and innovative Machine Learning Scientist with 5+ years of experience in developing, deploying, and optimizing scalable ML models across diverse industries including finance and healthcare. Proficient in Python, TensorFlow, PyTorch, and scikit-learn, with a proven track record in deep learning, natural language processing (NLP), and predictive modeling. Successfully led projects from conception to production, resulting in 20% improved fraud detection accuracy for a leading fintech firm and 15% increased diagnostic efficiency in clinical settings. Adept at feature engineering, model evaluation, and MLOps practices to ensure robust and interpretable solutions. Seeking to leverage advanced algorithmic expertise and problem-solving skills to drive data-driven innovation in a challenging research and development environment. Passionate about transforming complex data into actionable insights and contributing to cutting-edge AI advancements.'"
-
+    example_query = """ABHIJIT GUPTA, PhD
+Data Scientist | Financial-Risk ML Specialist | PhD, Machine Learning | Bengaluru, India
+abhijit038@gmail.com • +91 9561930406 • linkedin.com/in/abhijit-gupta-phd-639568166/
+PROFESSIONAL SUMMARY
+PhD‑trained ML scientist with 7+ years converting research into production. Generated £8 m+ in cost savings and 10 % alpha on £210 m commodity exposure. Deep expertise spans Bayesian inference, time‑series & causal modelling, graph neural networks, and large‑scale optimisation. Adept at partnering with business and engineering leaders to ship high‑impact solutions on Azure while mentoring cross‑functional teams. Multiple national AI wins and government‑funded research underscore a record of innovation and delivery.
+CORE COMPETENCIES
+ML / Statistics: Bayesian Inference • Deep / Graph NN • Causal TS • LLM/LLMOps • Agentic AI Econometrics
+Cloud & MLOps: Azure ML • Databricks • Spark • Docker • Kubernetes • GitLab CI/CD
+Domain & Leadership: Financial Risk Management • Commodity Hedging • Risk Analytics • Fraud Detection • Agile / OKRs • Mentoring • Algorithms Design • Generative AI/LLM for Finance
+Programming: Python, C++, Java
+PROFESSIONAL EXPERIENCE
+TESCO, Bengaluru, India - Data Scientist | Nov 2023 – Present
+Designed and deployed proprietary ML hedging models covering > £210 m in commodity futures; out‑performed market benchmarks by 10 % and realised £8 m savings.
+Earned back-to-back “Exceptional” performance ratings for driving high-impact ML solutions in commodity risk management.
+Built pricing & inventory‑optimization pipelines integrated with Azure ML + Databricks that recommends optimal implied cover levels across inflationary and deflationary cycles, enabling intelligent buying decisions that cut stock‑outs 9 % and lifted gross margin 3 pp.
+Championed CI/CD-driven model governance with automated drift monitoring, reducing release cycle time by 40%.
+Mentored data scientists, streamlining experiment workflows to cut model iteration time by 30 % and reduce post‑deployment defects by 20 %.
+NICE ACTIMIZE - Tech Lead, Data Scientist | Feb 2021 – Nov 2023
+Led 6‑member squad; probabilistic‑graph fraud models ↑ true positives 18 %, added $1 m+ YoY revenue.
+Won company-wide CoDay 2022 for building scalable election-risk simulation using Java and Spark; recognized by CTO for innovation in risk modelling architecture.
+Instituted Agile OKRs across the data science pipeline, increasing sprint on-time delivery from 68% to 92% by aligning delivery with strategic objectives.
+INTEL CORPORATION - AI Ambassador (Part‑time) | Jul 2018 – Jan 2022
+Created Computer Vision & NLP demos for Intel accelerators; tutorials viewed 8 k+ times.
+Delivered 10+ workshops on ML applications in science and engineering to 300+ professionals; topics included deep learning and domain-specific use cases.
+Contributed to open‑source OneAPI examples; code featured in Intel Developer Zone.
+EDUCATION
+PhD, Machine Learning | Indian Institute of Science Education and Research (IISER), Pune - 2022
+MS, Computational Science | IISER Pune - 2017
+B.Sc. | Hindu College, University of Delhi - 2015
+PhD Thesis: Designing Scalable ML algorithms for molecular recognition; awarded Govt. of India DBT‑AI grant[BT/PR34215/AI/133/22/2019].
+CERTIFICATIONS
+Financial Engineering & Risk Management Specialization - Columbia University (2025)
+NVIDIA – Rapid Application Development with Large Language Models (LLMs) – Jun 2025
+Optimization methods in Asset Management – Coursera, Columbia University (2025)
+AI and Machine Learning Algorithms and Techniques – Microsoft (2025)
+Bayesian Statistics - Coursera (2023)
+NVIDIA DLI: Accelerating Data Engineering Pipelines - Dec 2022
+NVIDIA DLI: Natural Language Processing - Nov 2022
+NVIDIA DLI: Fundamentals of Deep Learning - Sep 2022
+HONOURS & AWARDS
+All‑India Champion - Intel Python Hack Fury (4 000+ teams, organized by Intel, AWS)
+Finalist - Microsoft Azure Hackathon (8 500+ teams)
+Best Poster - IIT Delhi, BARC, Merck (multiple years)
+DBT‑AI Grant - Government of India, ₹3.2 M research funding [BT/PR34215/AI/133/22/2019]
+Certificate of Appreciation - Ministry of Electronics & IT, Govt of India (2020)
+SELECTED PUBLICATIONS
+Gupta, Abhijit. "Decoding Futures Price Dynamics: A Regularized Sparse Autoencoder for Interpretable Multi-Horizon Forecasting and Factor Discovery."  arXiv:2505.06795 (2025).
+Gupta, A, Mukherjee, A. "Capturing surface complementarity in proteins using unsupervised learning and robust curvature measure." Proteins. 2022; 90(9): 1669-1683. doi:10.1002/prot.26345
+Gupta, A., Kulkarni, M., Mukherjee, A. "Accurate prediction of B-form/A-form DNA conformation propensity from primary sequence: A machine learning and free energy handshake." Cell Patterns, 2(9), 2021, 100329. doi:10.1016/j.patter.2021.100329.
+Gupta, A., Mukherjee, A. "Prediction of good reaction coordinates and future evolution of MD trajectories using Regularized Sparse Autoencoders: A novel deep learning approach."
+Gupta, A., Mukherjee, A. "CardiGraphormer: Unveiling the Power of Self-Supervised Learning in Revolutionizing Drug Discovery", 2023, CardiGraphormer."""
+    example_query = f"Parse this: '{example_query}'"
     # Get the runner and execute the query
     runner = get_agent_runner()
     response = await runner.run_async(
         user_id=example_user_id, query=example_query, session_id=SESSION_ID
     )
     logger.info(f"\\n--- Response ---\\n{response}")
-    await emit_event(name="TestEvent", payload={"response": parse_dirty_json(response)})
+    await emit_event(
+        name="ParseResumeEvent", payload={"response": parse_dirty_json(response)}
+    )
     logger.info(f"\\n--- Query ---\\n{example_query}")
     logger.info(f"\\n--- Agent Response ---\\n{response}")
-    logger.info(f"\\n--- Emitted Test Event Payload (Structure) ---\\n{json.dumps({'response': parse_dirty_json(response)}, indent=2)}")
+    logger.info(
+        f"\\n--- Emitted Test Event Payload (Structure) ---\\n{json.dumps({'response': parse_dirty_json(response)}, indent=2)}"
+    )
 
     logger.info("\\n--- Agent Engine Example Finished ---")
     response_for_job_posting = await runner.run_async(
@@ -137,11 +193,18 @@ async def main():
         session_id=SESSION_ID,
     )
     # Emit the parsed job posting data
-    await emit_event(name="JobPostingAnalysisEvent", payload={"response": parse_dirty_json(response_for_job_posting)})
+    await emit_event(
+        name="JobPostingAnalysisEvent",
+        payload={"response": parse_dirty_json(response_for_job_posting)},
+    )
 
-    logger.info(f"\\n--- Job Posting Analysis Response (Original String) ---\\n{response_for_job_posting}")
+    logger.info(
+        f"\\n--- Job Posting Analysis Response (Original String) ---\\n{response_for_job_posting}"
+    )
     # Optionally log the structure that was actually sent to emit_event for verification
-    logger.info(f"\\n--- Emitted Job Posting Payload (Structure) ---\\n{json.dumps({'response': parse_dirty_json(response_for_job_posting)}, indent=2)}")
+    logger.info(
+        f"\\n--- Emitted Job Posting Payload (Structure) ---\\n{json.dumps({'response': parse_dirty_json(response_for_job_posting)}, indent=2)}"
+    )
     logger.info("\\n--- Job Posting Analysis Finished ---")
 
 

@@ -12,12 +12,12 @@ import dotenv
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 dotenv.load_dotenv()
+
 
 class Location(BaseModel):
     address: Optional[str] = Field(

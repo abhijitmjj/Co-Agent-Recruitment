@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 import re
-import json     
+import json
 import dotenv
 from google.cloud import pubsub_v1
 
@@ -10,8 +10,7 @@ dotenv.load_dotenv()
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -38,6 +37,7 @@ def _extract_json(text: str) -> dict | None:
         logger.warning("Failed to decode JSON from agent response.")
         return None
 
+
 # Environment variables
 PROJECT_ID = os.getenv("PROJECT_ID", "your-project")
 SUB_ID = os.getenv("SUB_ID", "my-events-sub")
@@ -48,8 +48,6 @@ def on_msg(message):
     event_type = message.attributes.get("event", "N/A")
     logger.info(f"Received event '{event_type}': {(message.data.decode('utf-8'))}")
     message.ack()
-                         
-
 
 
 def main():

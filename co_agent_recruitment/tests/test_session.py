@@ -12,6 +12,8 @@ from google.genai import types
 from co_agent_recruitment.agent import (
     root_agent,
 )
+
+
 # Configure logging with datetime and fancy INFO formatting
 class FancyFormatter(logging.Formatter):
     def format(self, record):
@@ -36,9 +38,6 @@ logger.addHandler(handler)
 logger.propagate = False
 # Add the co_agent_recruitment directory to the path
 # sys.path.insert(0, os.path.join(os.path.dirname(__file__), "co_agent_recruitment"))
-
-
-
 
 
 async def test_session_management():

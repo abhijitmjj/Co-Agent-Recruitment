@@ -57,7 +57,6 @@ _subscriber = pubsub_v1.SubscriberClient()
 _sub_path = _subscriber.subscription_path(PROJECT_ID, SUB_ID)
 
 
-
 def parse_dirty_json(text_blob: str) -> Union[Dict[str, Any], List[Any], None]:
     """
     Robustly finds and parses a JSON-like object from a string.
@@ -80,12 +79,12 @@ def parse_dirty_json(text_blob: str) -> Union[Dict[str, Any], List[Any], None]:
     # --- 1. Find the start of a potential JSON object ---
     # A JSON object can start with '{' or a JSON array with '['
     try:
-        first_brace = text_blob.index('{')
+        first_brace = text_blob.index("{")
     except ValueError:
         first_brace = -1
 
     try:
-        first_bracket = text_blob.index('[')
+        first_bracket = text_blob.index("[")
     except ValueError:
         first_bracket = -1
 
@@ -93,36 +92,38 @@ def parse_dirty_json(text_blob: str) -> Union[Dict[str, Any], List[Any], None]:
     if first_brace == -1 and first_bracket == -1:
         logger.warning("No JSON start character ('{' or '[') found in the text blob.")
         return None
-    
+
     start_index = -1
     if first_brace != -1 and first_bracket != -1:
         start_index = min(first_brace, first_bracket)
     elif first_brace != -1:
         start_index = first_brace
-    else: # first_bracket != -1
+    else:  # first_bracket != -1
         start_index = first_bracket
 
     # --- 2. Find the end of the potential JSON object ---
     # We look for the last '}' or ']'
     try:
-        last_brace = text_blob.rindex('}')
+        last_brace = text_blob.rindex("}")
     except ValueError:
         last_brace = -1
-    
+
     try:
-        last_bracket = text_blob.rindex(']')
+        last_bracket = text_blob.rindex("]")
     except ValueError:
         last_bracket = -1
 
     end_index = max(last_brace, last_bracket)
 
     if end_index == -1 or end_index < start_index:
-        logger.warning("Found a JSON start, but no corresponding end character ('}' or ']') found.")
+        logger.warning(
+            "Found a JSON start, but no corresponding end character ('}' or ']') found."
+        )
         return None
 
     # --- 3. Extract and parse the potential JSON string ---
     potential_json = text_blob[start_index : end_index + 1]
-    
+
     try:
         logger.info("Attempting to parse extracted text with dirtyjson...")
         # Use dirtyjson to parse the leniently formatted JSON
@@ -137,6 +138,7 @@ def parse_dirty_json(text_blob: str) -> Union[Dict[str, Any], List[Any], None]:
         # Catch any other unexpected errors during parsing
         logger.error(f"An unexpected error occurred during parsing. Error: {e}")
         return None
+
 
 # --------------------------------------------------------------------------- #
 # Tools
@@ -210,9 +212,7 @@ async def receive_events(max_messages: int = 5, timeout: int = 5) -> List[Dict]:
 
     # Always ack – tooling helper not streaming listener
     if ack_ids:
-        _subscriber.acknowledge(
-            request={"subscription": _sub_path, "ack_ids": ack_ids}
-        )
+        _subscriber.acknowledge(request={"subscription": _sub_path, "ack_ids": ack_ids})
 
     logger.info("Pulled %s messages", len(results))
     return results
