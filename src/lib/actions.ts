@@ -19,8 +19,7 @@ export async function summarizeCandidateProfileAction(input: SummarizeCandidateP
   try {
     const result = await summarizeCandidateProfile(input);
     return { success: true, data: result.summary };
-  } catch (error)
-  {
+  } catch (error) {
     console.error("Error summarizing candidate profile:", error);
     return { success: false, error: error instanceof Error ? error.message : "Failed to summarize profile" };
   }

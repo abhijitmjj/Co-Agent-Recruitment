@@ -1,0 +1,21 @@
+{
+  "servers": {
+    "A2A Docs": {
+      "type": "sse",
+      "url": "https://gitmcp.io/google-a2a/A2A"
+    },
+    "pydantic-ai Docs": {
+      "type": "sse",
+      "url": "https://gitmcp.io/pydantic/pydantic-ai"
+    },
+    "adk-python Docs": {
+      "type": "sse",
+      "url": "https://gitmcp.io/google/adk-python"
+    },
+    "pydantic Docs": {
+      "type": "sse",
+      "url": "https://gitmcp.io/pydantic/pydantic"
+    }
+
+  }
+}
