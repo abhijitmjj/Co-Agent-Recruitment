@@ -1,12 +1,13 @@
 "use client";
-import React, {
+import React,
+  {
   createContext,
   useContext,
   useEffect,
   useState,
   ReactNode,
   useMemo,
-} from 'react';
+  } from 'react';
 import {
   onAuthStateChanged,
   User,
@@ -16,6 +17,7 @@ import {
 } from 'firebase/auth';
 import { auth, google } from '../lib/firebase-client';
 import { useSession, signIn as nextAuthSignIn } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 
 type AuthContextValue = {
   user: User | null;
@@ -65,6 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const { data: nextSession, status: nextStatus } = useSession();
+  const pathname = usePathname();
 
   useEffect(() => {
     console.debug('[AuthContext] useEffect: subscribe to onAuthStateChanged, nextStatus=', nextStatus);
@@ -77,8 +80,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (nextStatus === 'loading') {
       // waiting for NextAuth to initialize
     } else if (nextStatus === 'unauthenticated') {
-      console.debug('[AuthContext] NextAuth unauthenticated, redirecting to signIn');
-      nextAuthSignIn();
+      if (!pathname.startsWith('/candidate')) {
+        console.debug('[AuthContext] NextAuth unauthenticated, redirecting to signIn');
+        nextAuthSignIn();
+      } else {
+        console.debug('[AuthContext] Skipping auth redirect on candidate route');
+      }
     } else if (nextStatus === 'authenticated' && !user) {
       console.debug('[AuthContext] NextAuth authenticated & no Firebase user, fetching custom token');
       signIn();
