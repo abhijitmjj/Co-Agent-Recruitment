@@ -14,7 +14,7 @@ import {
   User,
   signInWithCustomToken,
 } from 'firebase/auth';
-import { auth, google } from '../lib/firebase-client';
+import { auth, google, github } from '../lib/firebase-client';
 import { useSession, signIn as nextAuthSignIn } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 
