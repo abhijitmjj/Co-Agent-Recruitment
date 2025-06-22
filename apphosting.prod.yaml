@@ -6,7 +6,7 @@ runConfig:
   # concurrency: 80
   # cpu: 1
   # memoryMiB: 512
-
+# GRANT access via: npx firebase apphosting:secrets:grantaccess NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN --backend a2a-githubaction
 # Environment variables and secrets.
 env:
   # Grant access to secrets in Cloud Secret Manager.
@@ -51,6 +51,42 @@ env:
     availability:
       - RUNTIME
       - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_API_KEY # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_PROJECT_ID # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_APP_ID # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  
   # Example of a non-secret environment variable:
   # - variable: NODE_ENV
   #   value: production # Or dynamically set based on your needs
