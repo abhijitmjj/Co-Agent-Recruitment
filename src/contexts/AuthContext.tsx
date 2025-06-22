@@ -13,8 +13,6 @@ import {
   onAuthStateChanged,
   User,
   signInWithCustomToken,
-  signInWithPopup,
-  signInWithRedirect,
 } from 'firebase/auth';
 import { auth, google } from '../lib/firebase-client';
 import { useSession, signIn as nextAuthSignIn } from 'next-auth/react';
@@ -37,20 +35,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
 
   const signIn = async () => {
-    if (process.env.NODE_ENV === 'development') {
-      console.debug('[AuthContext] Dev mode: signInWithPopup');
-      try {
-        await signInWithPopup(auth, google);
-        console.debug('[AuthContext] Firebase popup sign-in succeeded');
-      } catch (err) {
-        console.error('[AuthContext] Firebase popup signIn error:', err);
-        if ((err as any)?.code === 'auth/popup-blocked') {
-          console.debug('[AuthContext] popup blocked, falling back to redirect');
-          await signInWithRedirect(auth, google);
-        }
-      }
-      return;
-    }
     console.debug('[AuthContext] Firebase: requesting custom token');
     try {
       const res = await fetch('/api/auth/firebase');
