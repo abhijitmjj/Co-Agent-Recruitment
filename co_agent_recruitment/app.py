@@ -7,13 +7,16 @@ import asyncio
 import sys
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from co_agent_recruitment.agent import parse_resume
-from co_agent_recruitment.json_agents import (
+from .agent import parse_resume
+from .json_agents import (
     parse_resume_json,
     analyze_job_posting_json,
     process_document_json,
 )
+from .tools.pubsub import emit_event
+from .agent_engine import get_agent_runner
 
 
 class ResumeRequest(BaseModel):
@@ -87,6 +90,19 @@ class ErrorResponse(BaseModel):
     error: str = Field(..., description="Error message")
 
 
+class EventRequest(BaseModel):
+    """Request model for publishing an event."""
+    event_name: str = Field(..., description="The name of the event to publish")
+    payload: Dict[str, Any] = Field(..., description="The event payload")
+
+
+class OrchestratorRequest(BaseModel):
+    """Request model for the orchestrator agent."""
+    query: str = Field(..., description="The query to send to the orchestrator agent")
+    user_id: str = Field(..., description="The user ID for the session")
+    session_id: Optional[str] = Field(None, description="The session ID to use")
+
+
 # Create FastAPI app instance
 app = FastAPI(
     title="Co-Agent Recruitment API",
@@ -94,6 +110,15 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
 
@@ -253,6 +278,41 @@ async def process_document_endpoint(request: DocumentRequest):
         raise HTTPException(
             status_code=500,
             detail={"success": False, "error": "Failed to process document"},
+        )
+
+
+@app.post("/publish-event")
+async def publish_event_endpoint(request: EventRequest):
+    """
+    Publish an event to the Pub/Sub topic.
+    """
+    try:
+        message_id = await emit_event(request.event_name, request.payload)
+        return {"success": True, "message_id": message_id}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={"success": False, "error": f"Failed to publish event: {str(e)}"},
+        )
+
+
+@app.post("/orchestrator")
+async def orchestrator_endpoint(request: OrchestratorRequest):
+    """
+    Route a query to the orchestrator agent.
+    """
+    try:
+        runner = get_agent_runner()
+        response = await runner.run_async(
+            user_id=request.user_id,
+            query=request.query,
+            session_id=request.session_id,
+        )
+        return {"success": True, "response": response}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={"success": False, "error": f"Failed to run orchestrator: {str(e)}"},
         )
 
 
