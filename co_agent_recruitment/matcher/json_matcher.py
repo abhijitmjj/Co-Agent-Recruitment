@@ -16,21 +16,19 @@ async def generate_compatibility_score_json(
     Returns:
         Dict[str, Any]: Compatibility score data as JSON
     """
-    logging.info("Starting JSON compatibility score generation")
+    logger.info("Starting JSON compatibility score generation")
 
     try:
         result = await generate_compatibility_score(resume_data, job_posting_data)
 
-        logging.info("Compatibility score generation successful - returning JSON")
+        logger.info("Compatibility score generation successful - returning JSON")
         return result
 
     except Exception as e:
-        logging.error(f"Compatibility score generation failed: {e}")
+        logger.exception("Compatibility score generation failed")
         return {
             "error": "Compatibility score generation failed",
             "error_type": type(e).__name__,
             "message": str(e),
         }
-
-
 __all__ = ["generate_compatibility_score_json"]
