@@ -1,9 +1,5 @@
-# Co-Agent-Recruitment
+# Co-Agent-Recruitment Hire — Agent-to-Agent AI Recruitment Platform
 
-<img width="902" alt="image" src="https://github.com/user-attachments/assets/ad25398d-6e0a-4491-9707-643c0a364630" />
-
-
-# Co-Agent-Recruitment — Agent-to-Agent AI Recruitment Platform
 
 ## Executive Summary
 
@@ -26,6 +22,8 @@ Co-Agent-Recruitment Hire addresses these pain points by automating parsing, mat
 | **Agent-to-Agent (Co-Agent-Recruitment)**       | Agents coordinate via Pub/Sub events and sub-agent orchestration.    |
 | **Core Agents**                | Resume Parser, Job Posting Parser, Matcher, and Orchestrator.       |
 | **Dataflow & Scalability**     | Stateless agents with Pub/Sub messaging, containerized for elastic scaling. |
+
+![alt text](image.png)
 
 ## Architecture Overview
 
@@ -109,6 +107,3 @@ Contributions are welcome! Please open an issue or pull request, and refer to ou
 ## License
 
 This project is released under the [MIT License](LICENSE).
-
-
-![Co-Agent-Recruitment](https://github.com/user-attachments/assets/dc4c42ff-b095-4aff-8d8f-fbd5b0c90522)

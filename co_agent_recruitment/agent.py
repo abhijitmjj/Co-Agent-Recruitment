@@ -6,12 +6,14 @@ from typing import Optional
 from google.adk.agents import Agent
 from google.adk.sessions import InMemorySessionService
 from google.adk.sessions.session import Session
-from co_agent_recruitment.job_posting import job_posting_agent
-from co_agent_recruitment.resume_parser import (
+from google.adk.agents.callback_context import CallbackContext
+from .job_posting.agent import job_posting_agent
+from .resume_parser.agent import (
     parse_resume,
     parse_resume_agent,
     sanitize_input,
 )
+from .matcher.agent import matcher_agent
 import dotenv
 
 # Load environment variables from .env file
@@ -28,10 +30,8 @@ def get_model_name() -> str:
     return os.getenv("MODEL_ID", "gemini-2.5-flash")
 
 
-async def orchestrator_before_callback(callback_context) -> None:
+async def orchestrator_before_callback(callback_context: CallbackContext) -> None:
     """Callback for orchestrator agent before execution."""
-    from google.adk.agents.callback_context import CallbackContext
-
     if not isinstance(callback_context, CallbackContext):
         return
 
@@ -67,10 +67,8 @@ async def orchestrator_before_callback(callback_context) -> None:
     )
 
 
-async def orchestrator_after_callback(callback_context) -> None:
+async def orchestrator_after_callback(callback_context: CallbackContext) -> None:
     """Callback for orchestrator agent after execution."""
-    from google.adk.agents.callback_context import CallbackContext
-
     if not isinstance(callback_context, CallbackContext):
         return
 
@@ -116,8 +114,9 @@ def create_orchestrator_agent() -> Agent:
             "2. Get the result from job_posting_agent\\n"
             "3. Add orchestrator session information to the response\\n"
             "4. Return the complete JSON with both job posting results and session data\\n\\n"
+            "When both a resume and job posting are available, call the matcher_agent to get a compatibility score.\\n"
         ),
-        sub_agents=[parse_resume_agent, job_posting_agent],
+        sub_agents=[parse_resume_agent, job_posting_agent, matcher_agent],
         output_key="result",
         before_agent_callback=orchestrator_before_callback,
         after_agent_callback=orchestrator_after_callback,
