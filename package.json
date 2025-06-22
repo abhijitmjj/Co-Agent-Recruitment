@@ -47,6 +47,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^16.5.0",
     "firebase": "^11.8.1",
+    "firebase-admin": "^13.4.0",
     "firebase-tools": "^13.11.2",
     "genkit": "^1.8.0",
     "jest": "^29.7.0",
