@@ -1,10 +1,6 @@
-import dynamic from 'next/dynamic';
+"use client";
 
-// Load the client-side CandidateForm without server-side rendering
-const CandidateForm = dynamic(
-  () => import('@/components/candidate-form'),
-  { ssr: false }
-);
+import CandidateForm from '@/components/candidate-form';
 
 export default function CandidatePage() {
   return <CandidateForm />;
