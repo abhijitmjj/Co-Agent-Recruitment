@@ -3,35 +3,112 @@
 <img width="902" alt="image" src="https://github.com/user-attachments/assets/ad25398d-6e0a-4491-9707-643c0a364630" />
 
 
+# Co-Agent-Recruitment — Agent-to-Agent AI Recruitment Platform
 
-## Environment Variables
+## Executive Summary
 
-Copy `.env.example` to `.env.local` (or set equivalent environment variables) and fill in the following credentials:
+Co-Agent-Recruitment Hire automates the end-to-end recruitment workflow by orchestrating specialized AI agents to parse resumes, analyze job postings, and deliver data-driven match recommendations. Built on Google’s Agent Development Kit (ADK) and leveraging event-driven agent-to-agent communication, Co-Agent-Recruitment Hire provides a scalable, modular architecture for streamlined hiring operations.
 
-- **NextAuth**:
-  - `NEXTAUTH_URL`: the full URL of your site (e.g. `http://localhost:3000` in development or `https://your-domain.com` in production)
-  - `NEXTAUTH_SECRET`: a secure, random string (at least 32 characters)
-- **OAuth Providers**:
-  - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
-  - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`
-  - **Ensure** you add your app's callback URIs in the Google/GitHub console (`/api/auth/callback/google`, etc.)
-- **Firebase (client-side)**:
-  - `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`,
-    `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`,
-    `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`
-- **Firebase Admin (server-side)**:
-  - `FIREBASE_SERVICE_ACCOUNT_KEY`: your Firebase service account JSON as a **single-line** string (no line breaks).
+## Motivation
 
-  ```bash
-  # Assuming serviceAccount.json is your downloaded key
-  # Convert to one line with escaped newlines:
-  jq -c . serviceAccount.json > .env.local
-  ```
+Hiring teams face several challenges:
+- Manual extraction of unstructured resume and job posting data.
+- Lack of real-time, structured insights for candidate–job alignment.
+- Scalability bottlenecks when handling high volumes of applications.
 
-If `FIREBASE_SERVICE_ACCOUNT_KEY` is not set, the Admin SDK will fall back to Application Default Credentials (ADC). To configure ADC locally, run:
+Co-Agent-Recruitment Hire addresses these pain points by automating parsing, matching, and session management to accelerate and scale the recruitment process.
 
-    gcloud auth application-default login
+## Solution Overview
 
-To get started, take a look at `src/app/page.tsx`.
+| Pillar                         | Description                                                          |
+|--------------------------------|----------------------------------------------------------------------|
+| **ADK Framework**              | Defines and configures AI agents for discrete parsing and matching tasks. |
+| **Agent-to-Agent (Co-Agent-Recruitment)**       | Agents coordinate via Pub/Sub events and sub-agent orchestration.    |
+| **Core Agents**                | Resume Parser, Job Posting Parser, Matcher, and Orchestrator.       |
+| **Dataflow & Scalability**     | Stateless agents with Pub/Sub messaging, containerized for elastic scaling. |
+
+## Architecture Overview
+
+```text
+   +----------+          +-------------+        +------------+
+   | Company  |          | Resume      |        | Job Posting|
+   | & Candidate|---+--->| Parser      |        | Parser     |
+   +----------+   |      +-------------+        +------------+
+                  |              \                /
+                  |               \              /
+                  |           +----------------------+      +--------+
+                  +---------->| Orchestrator Agent   |----->| Matcher|
+                              +----------------------+      +--------+
+                                                  |
+                                                  v
+                                          +---------------+
+                                          | UI & Reporting|
+                                          +---------------+
+```
+
+## Agent Development Kit (ADK) Framework
+
+Agents and orchestration are defined using Google’s ADK, which provides session management, callbacks, and modular sub-agent support.【F:co_agent_recruitment/agent.py†L99-L123】
+
+The `OrchestratorAgentRunner` wraps the orchestrator for programmatic use and integrates session handling and event publishing.【F:co_agent_recruitment/agent_engine.py†L31-L44】
+
+## Agent-to-Agent Communication (Co-Agent-Recruitment)
+
+Agents emit and consume events via Google Cloud Pub/Sub using helper tools for robust message handling. This decouples services and enables asynchronous coordination.【F:co_agent_recruitment/tools/pubsub.py†L146-L168】【F:co_agent_recruitment/tools/pubsub.py†L171-L183】
+
+## Core Features
+
+Outlined in the project [blueprint](docs/blueprint.md):【F:docs/blueprint.md†L5-L9】
+- **Company Interface:** Structured submission of job descriptions.
+- **Candidate Interface:** Structured submission of resumes.
+- **AI Matchmaking:** Orchestrator agent compares and matches profiles using Gemini via ADK.
+- **Match Display:** Ranked match recommendations for both companies and candidates.
+
+## Dataflow & Scalability Management
+
+1. **Ingestion:** Resumes and job postings are submitted via REST or events.
+2. **Parsing:** Dedicated agents transform unstructured text into JSON structures.
+3. **Orchestration:** A master agent routes parsed data, invokes matching, and enriches responses with session info.
+4. **Matching:** Compatibility scores are generated through a matcher agent.
+5. **Emission:** Results are published to Pub/Sub, stored, and surfaced in the UI.
+
+All components are stateless and containerized for horizontal scaling. Pub/Sub ensures backpressure management and elasticity under load.
+
+## Getting Started
+
+1. Clone the repository and navigate into the project root.
+2. Copy environment templates and set required variables:
+   ```bash
+   cp .env.example .env.local
+   ```
+3. Start dependencies (Pub/Sub emulator, Qdrant, etc.) via Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
+4. Launch the API server:
+   ```bash
+   uvicorn standalone_server:app --reload
+   ```
+5. Open the UI (NextJS frontend) and follow on-screen prompts.
+
+## Project Structure
+
+```
+. 
+├── co_agent_recruitment/          # Core ADK agents & API
+├── docs/                         # Design blueprints and diagrams
+├── standalone_server.py          # Lightweight JSON-focused API
+├── compose.yaml                  # Docker Compose for dependencies
+└── README.md                     # This document
+```
+
+## Contributing
+
+Contributions are welcome! Please open an issue or pull request, and refer to our [contributing guidelines](CONTRIBUTING.md).
+
+## License
+
+This project is released under the [MIT License](LICENSE).
+
 
 ![Co-Agent-Recruitment](https://github.com/user-attachments/assets/dc4c42ff-b095-4aff-8d8f-fbd5b0c90522)
