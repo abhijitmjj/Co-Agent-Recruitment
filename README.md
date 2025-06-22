@@ -3,7 +3,8 @@
 
 ## Executive Summary
 
-Co-Agent-Recruitment Hire automates the end-to-end recruitment workflow by orchestrating specialized AI agents to parse resumes, analyze job postings, and deliver data-driven match recommendations. Built on Google’s Agent Development Kit (ADK) and leveraging event-driven agent-to-agent communication, Co-Agent-Recruitment Hire provides a scalable, modular architecture for streamlined hiring operations.
+Co-Agent-Recruitment Hire automates the end-to-end recruitment workflow by orchestrating specialized AI agents to parse resumes, analyze job postings, and deliver data-driven match recommendations—all while safeguarding candidate privacy. Recruiters only ever see anonymized, non-PII summaries and high-level insights; our co-agents handle personal data with the utmost care.
+Built on Google’s Agent Development Kit (ADK) and leveraging event-driven agent-to-agent communication, Co-Agent-Recruitment Hire provides a scalable, modular architecture for streamlined and privacy-first hiring operations.
 
 ## Motivation
 
@@ -61,6 +62,7 @@ Outlined in the project [blueprint](docs/blueprint.md):【F:docs/blueprint.md†
 - **Candidate Interface:** Structured submission of resumes.
 - **AI Matchmaking:** Orchestrator agent compares and matches profiles using Gemini via ADK.
 - **Match Display:** Ranked match recommendations for both companies and candidates.
+- **Privacy-First Workflow:** Recruiters only ever see anonymized summaries and high-level insights; all PII remains securely managed by our cooperative agents.
 
 ## Dataflow & Scalability Management
 
