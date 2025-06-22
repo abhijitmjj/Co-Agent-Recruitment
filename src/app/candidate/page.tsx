@@ -18,6 +18,7 @@ import { summarizeCandidateProfileAction, performMatchmakingAction, type Candida
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Users, Sparkles, FileText, Search, Briefcase, Loader2 } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
+import ResumeUploader from '@/components/resume-uploader';
 import Link from 'next/link';
 
 export default function CandidatePage() {
@@ -139,6 +140,13 @@ export default function CandidatePage() {
                     </FormItem>
                   )}
                 />
+                <div className="space-y-2 rounded-lg border bg-card p-4 shadow-sm">
+                  <h3 className="font-medium">Upload Resume (Optional)</h3>
+                  <ResumeUploader />
+                  <p className="text-xs text-muted-foreground">
+                    Upload your resume to supplement the information in your profile.
+                  </p>
+                </div>
                 <Button type="submit" size="lg" className="w-full bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105" disabled={form.formState.isSubmitting || isLoadingSummary}>
                   {(form.formState.isSubmitting || isLoadingSummary) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                   Submit Profile & Find Matches
