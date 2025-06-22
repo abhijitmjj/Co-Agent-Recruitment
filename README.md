@@ -22,35 +22,8 @@ Co-Agent-Recruitment Hire addresses these pain points by automating parsing, mat
 | **Agent-to-Agent (Co-Agent-Recruitment)**       | Agents coordinate via Pub/Sub events and sub-agent orchestration.    |
 | **Core Agents**                | Resume Parser, Job Posting Parser, Matcher, and Orchestrator.       |
 | **Dataflow & Scalability**     | Stateless agents with Pub/Sub messaging, containerized for elastic scaling. |
-=======
-# Co-Agent-Recruitment
 
-<img width="902" alt="image" src="https://github.com/user-attachments/assets/ad25398d-6e0a-4491-9707-643c0a364630" />
-
-
-# Co-Agent-Recruitment — Agent-to-Agent AI Recruitment Platform
-
-## Executive Summary
-
-Co-Agent-Recruitment Hire automates the end-to-end recruitment workflow by orchestrating specialized AI agents to parse resumes, analyze job postings, and deliver data-driven match recommendations. Built on Google’s Agent Development Kit (ADK) and leveraging event-driven agent-to-agent communication, Co-Agent-Recruitment Hire provides a scalable, modular architecture for streamlined hiring operations.
-
-## Motivation
-
-Hiring teams face several challenges:
-- Manual extraction of unstructured resume and job posting data.
-- Lack of real-time, structured insights for candidate–job alignment.
-- Scalability bottlenecks when handling high volumes of applications.
-
-Co-Agent-Recruitment Hire addresses these pain points by automating parsing, matching, and session management to accelerate and scale the recruitment process.
-
-## Solution Overview
-
-| Pillar                         | Description                                                          |
-|--------------------------------|----------------------------------------------------------------------|
-| **ADK Framework**              | Defines and configures AI agents for discrete parsing and matching tasks. |
-| **Agent-to-Agent (Co-Agent-Recruitment)**       | Agents coordinate via Pub/Sub events and sub-agent orchestration.    |
-| **Core Agents**                | Resume Parser, Job Posting Parser, Matcher, and Orchestrator.       |
-| **Dataflow & Scalability**     | Stateless agents with Pub/Sub messaging, containerized for elastic scaling. |
+![alt text](image.png)
 
 ## Architecture Overview
 
