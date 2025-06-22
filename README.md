@@ -1,9 +1,8 @@
 # Co-Agent-Recruitment
 
-<img width="904" alt="image" src="https://github.com/user-attachments/assets/1f2b12a3-b809-47cc-a63d-80b8d656a155" />
+<img width="902" alt="image" src="https://github.com/user-attachments/assets/ad25398d-6e0a-4491-9707-643c0a364630" />
 
 
-This is a NextJS starter in Firebase Studio.
 
 ## Environment Variables
 
