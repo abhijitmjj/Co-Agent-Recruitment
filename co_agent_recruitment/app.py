@@ -15,6 +15,7 @@ from .json_agents import (
     analyze_job_posting_json,
     process_document_json,
 )
+from .matcher.json_matcher import generate_compatibility_score_json
 from .tools.pubsub import emit_event
 from .agent_engine import get_agent_runner
 
@@ -101,6 +102,21 @@ class OrchestratorRequest(BaseModel):
     query: str = Field(..., description="The query to send to the orchestrator agent")
     user_id: str = Field(..., description="The user ID for the session")
     session_id: Optional[str] = Field(None, description="The session ID to use")
+
+
+class MatcherRequest(BaseModel):
+    """Request model for the matcher agent."""
+    resume_data: Dict[str, Any] = Field(..., description="Structured resume data")
+    job_posting_data: Dict[str, Any] = Field(
+        ..., description="Structured job posting data"
+    )
+
+
+class MatcherResponse(BaseModel):
+    """Response model for the matcher agent."""
+    success: bool
+    data: Dict[str, Any]
+    message: str
 
 
 # Create FastAPI app instance
@@ -313,6 +329,41 @@ async def orchestrator_endpoint(request: OrchestratorRequest):
         raise HTTPException(
             status_code=500,
             detail={"success": False, "error": f"Failed to run orchestrator: {str(e)}"},
+        )
+
+
+@app.post(
+    "/generate-score",
+    response_model=MatcherResponse,
+    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+)
+async def generate_score_endpoint(request: MatcherRequest):
+    """
+    Generate a compatibility score between a resume and a job posting.
+    """
+    try:
+        result = await generate_compatibility_score_json(
+            request.resume_data, request.job_posting_data
+        )
+
+        if "error" in result:
+            raise HTTPException(
+                status_code=500,
+                detail={"success": False, "error": result["error"]},
+            )
+
+        return MatcherResponse(
+            success=True,
+            data=result,
+            message="Compatibility score generated successfully",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "error": f"Failed to generate score: {str(e)}",
+            },
         )
 
 
