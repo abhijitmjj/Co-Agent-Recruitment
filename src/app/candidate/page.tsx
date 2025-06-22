@@ -1,7 +1,5 @@
-"use client";
-
-import CandidateForm from '@/components/candidate-form';
+import ClientCandidateForm from '@/components/ClientCandidateForm';
 
 export default function CandidatePage() {
-  return <CandidateForm />;
+  return <ClientCandidateForm />;
 }
