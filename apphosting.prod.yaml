@@ -87,6 +87,8 @@ env:
       - RUNTIME
       - BUILD
 scripts:
+  packageManagerInstallCommand: curl -fsSL https://bun.sh/install | bash
+  installCommand: bun install
   buildCommand: bun run build
   runCommand: bun run start
   # Example of a non-secret environment variable:
