@@ -90,6 +90,39 @@ class OrchestratorAgentRunner:
                             event.content.parts[0].text
                             or "Agent returned empty content."
                         )
+                        match event.author:
+                            case "resume_parser_agent":
+                                await emit_event(
+                                    name="ParseResumeEvent",
+                                    payload={
+                                        "response": parse_dirty_json(
+                                            final_response_text
+                                        )
+                                    },
+                                )
+                            case "job_posting_agent":
+                                await emit_event(
+                                    name="ParseJobPostingEvent",
+                                    payload={
+                                        "response": parse_dirty_json(
+                                            final_response_text
+                                        )
+                                    },
+                                )
+                            case "matcher_agent":
+                                await emit_event(
+                                    name="CompatibilityScoreEvent",
+                                    payload={
+                                        "response": parse_dirty_json(
+                                            final_response_text
+                                        )
+                                    },
+                                )
+                            case _:
+                                logger.warning(
+                                    f"Unknown agent author: {event.author}. "
+                                    "No specific event emitted."
+                                )
                     logger.info(
                         f"Final response for user '{user_id}': {final_response_text}"
                     )
