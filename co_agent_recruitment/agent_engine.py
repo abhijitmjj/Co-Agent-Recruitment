@@ -1,3 +1,4 @@
+from typing import cast
 import asyncio
 import logging
 import json  # Added import
@@ -93,7 +94,13 @@ class OrchestratorAgentRunner:
                         match event.author:
                             case "resume_parser_agent":
 
-                                resume_JSON = event.actions.state_delta.get("resume_JSON", final_response_text)
+                                # value from state_delta may be Any; cast to str for typing
+                                resume_JSON: str = cast(
+                                    str,
+                                    event.actions.state_delta.get(
+                                        "resume_JSON", final_response_text
+                                    ),
+                                )
                                 logger.info(
                                     f"Emitting ParseResumeEvent with final response. {resume_JSON}"
                                 )
@@ -108,11 +115,20 @@ class OrchestratorAgentRunner:
                                     },
                                 )
                             case "job_posting_agent":
+                                job_posting_JSON: str = cast(
+                                    str,
+                                    event.actions.state_delta.get(
+                                        "job_posting_JSON", final_response_text
+                                    ),
+                                )
+                                logger.info(
+                                    f"Emitting JobPostingAnalysisEvent with final response. {job_posting_JSON}"
+                                )
                                 await emit_event(
                                     name="ParseJobPostingEvent",
                                     payload={
                                         "response": parse_dirty_json(
-                                            final_response_text
+                                            job_posting_JSON
                                         ),
                                         "user_id": user_id,
                                         "session_id": active_session_id,
