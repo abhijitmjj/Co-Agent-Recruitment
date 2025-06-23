@@ -91,8 +91,8 @@ export default function CandidateForm() {
     setIsLoadingMatches(false);
     setIsSubmitted(true);
     // Publish an event after successful submission
-    await publishQueryAction(finalSummary, user_id, session_id);
-    await publishEventAction("candidate_submitted", newCandidate);
+    await publishQueryAction(data.experienceSummary, user_id, session_id);
+    // await publishEventAction("candidate_submitted", newCandidate);
   };
 
   const handleBackToForm = () => {

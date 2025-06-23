@@ -1,5 +1,6 @@
 import functions_framework
 import json
+import base64
 import os
 import logging
 
@@ -40,10 +41,20 @@ def save_resume_to_firestore_v2(cloud_event):
     logger.info(f"Processing function trigger for messageId: {cloud_event['id']}")
 
     try:
-        payload_str = cloud_event.data["message"]["data"]
-        parsed_resume = json.loads(payload_str)
-        
-    except (KeyError, TypeError, json.JSONDecodeError) as e:
+        raw_data = cloud_event.data.get("message", {}).get("data", "")
+        # Decode the Pub/Sub message data from base64
+        payload_bytes = base64.b64decode(raw_data)
+        payload_str = payload_bytes.decode("utf-8")
+        parsed_resume: dict = json.loads(payload_str)
+        logger.info(f"Received payload: {parsed_resume}")
+        pure_resume = parsed_resume.get("response", {}).get("parse_resume_response", {}).get("resume_data", {})
+        logger.info(f"Parsed resume data: {pure_resume}")
+        uid = parsed_resume.get("user_id", "")
+        session_id = parsed_resume.get("session_id", "")
+
+
+
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
         logger.error(f"Error decoding or parsing Pub/Sub message: {e}")
         # Exit gracefully if the message format is unexpected.
         return
@@ -52,10 +63,21 @@ def save_resume_to_firestore_v2(cloud_event):
 
     try:
         # The Firestore logic remains exactly the same.
-        doc_ref = db.collection('candidates').add(parsed_resume)
+        doc_ref = db.collection('candidates').add({
+            "resume_data": pure_resume,
+            "user_id": uid,
+            "session_id": session_id,
+        })
         logger.info(f"Successfully created document with ID: {doc_ref[1].id}")
 
     except Exception as e:
         logger.error(f"Error writing to Firestore: {e}")
         # Raising the exception signals a failure for potential retries.
         raise
+# gcloud functions deploy save_resume_to_firestore_v2 \
+# --gen2 \
+# --runtime python313 \
+# --region asia-south1 \
+# --source . \
+# --entry-point save_resume_to_firestore_v2 \
+# --trigger-topic co-agent-recruitment-events

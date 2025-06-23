@@ -97,7 +97,9 @@ class OrchestratorAgentRunner:
                                     payload={
                                         "response": parse_dirty_json(
                                             final_response_text
-                                        )
+                                        ),
+                                        "user_id": user_id,
+                                        "session_id": active_session_id,
                                     },
                                 )
                             case "job_posting_agent":
@@ -106,7 +108,9 @@ class OrchestratorAgentRunner:
                                     payload={
                                         "response": parse_dirty_json(
                                             final_response_text
-                                        )
+                                        ),
+                                        "user_id": user_id,
+                                        "session_id": active_session_id,
                                     },
                                 )
                             case "matcher_agent":
@@ -115,7 +119,9 @@ class OrchestratorAgentRunner:
                                     payload={
                                         "response": parse_dirty_json(
                                             final_response_text
-                                        )
+                                        ),
+                                        "user_id": user_id,
+                                        "session_id": active_session_id,
                                     },
                                 )
                             case _:
