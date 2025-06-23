@@ -234,7 +234,7 @@ sequenceDiagram
 
 ### Orchestrator Agent
 
-**File**: [`co_agent_recruitment/agent.py`](../../../co_agent_recruitment/agent.py)
+**File**: [`co_agent_recruitment/agent.py`](../../co_agent_recruitment/agent.py)
 
 ```python
 # Configuration
@@ -249,7 +249,7 @@ description: "Orchestrates the resume parsing and job posting agents. Dispatches
 
 ### Resume Parser Agent  
 
-**File**: [`co_agent_recruitment/resume_parser/agent.py`](../../../co_agent_recruitment/resume_parser/agent.py)
+**File**: [`co_agent_recruitment/resume_parser/agent.py`](../../co_agent_recruitment/resume_parser/agent.py)
 
 ```python
 # Configuration  
@@ -264,7 +264,7 @@ description: "Agent to parse resume text and transform it into a structured JSON
 
 ### Job Posting Agent
 
-**File**: [`co_agent_recruitment/job_posting/agent.py`](../../../co_agent_recruitment/job_posting/agent.py)
+**File**: [`co_agent_recruitment/job_posting/agent.py`](../../co_agent_recruitment/job_posting/agent.py)
 
 ```python
 # Configuration
@@ -279,7 +279,7 @@ description: "Agent to parse job posting text and transform it into a structured
 
 ### Matcher Agent
 
-**File**: [`co_agent_recruitment/matcher/agent.py`](../../../co_agent_recruitment/matcher/agent.py)
+**File**: [`co_agent_recruitment/matcher/agent.py`](../../co_agent_recruitment/matcher/agent.py)
 
 ```python
 # Configuration
@@ -370,7 +370,7 @@ SUB_ID="co-agent-recruitment-subscription"  # Pub/Sub subscription
 
 ### Agent-Level Error Handling
 
-**Resume Parser Agent** ([`co_agent_recruitment/resume_parser/agent.py`](../../../co_agent_recruitment/resume_parser/agent.py))
+**Resume Parser Agent** ([`co_agent_recruitment/resume_parser/agent.py`](../../co_agent_recruitment/resume_parser/agent.py))
 ```python
 try:
     result = await agent.run(sanitized_input, output_type=Resume)
@@ -392,7 +392,7 @@ except Exception as e:
 
 ### Tool-Level Error Handling
 
-**parse_dirty_json** ([`co_agent_recruitment/tools/pubsub.py`](../../../co_agent_recruitment/tools/pubsub.py))
+**parse_dirty_json** ([`co_agent_recruitment/tools/pubsub.py`](../../co_agent_recruitment/tools/pubsub.py))
 ```python
 try:
     parsed_data = dirtyjson.loads(potential_json)
@@ -407,7 +407,7 @@ except Exception as e:
 
 ### Session Management Error Handling
 
-**OrchestratorAgentRunner** ([`co_agent_recruitment/agent_engine.py`](../../../co_agent_recruitment/agent_engine.py))
+**OrchestratorAgentRunner** ([`co_agent_recruitment/agent_engine.py`](../../co_agent_recruitment/agent_engine.py))
 ```python
 try:
     # Agent execution logic
@@ -568,7 +568,7 @@ python -m pytest co_agent_recruitment/tests/
 
 ### Current Logging Infrastructure
 
-**Structured Logging** ([`co_agent_recruitment/callbacks.py`](../../../co_agent_recruitment/callbacks.py))
+**Structured Logging** ([`co_agent_recruitment/callbacks.py`](../../co_agent_recruitment/callbacks.py))
 ```python
 logging.basicConfig(
     level=logging.INFO,
