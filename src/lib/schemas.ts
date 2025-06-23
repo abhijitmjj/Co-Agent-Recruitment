@@ -35,7 +35,7 @@ const createSecureStringSchema = (minLength: number, maxLength: number, fieldNam
 
 export const JobDescriptionSchema = z.object({
   jobTitle: createSecureStringSchema(3, 100, "Job title"),
-  responsibilities: createSecureStringSchema(50, 5000, "Responsibilities"),
+  responsibilities: createSecureStringSchema(50, 10000, "Responsibilities"),
   requiredSkills: createSecureStringSchema(10, 1000, "Required skills")
     .describe("Comma-separated list of skills"),
 });
@@ -49,7 +49,7 @@ export const CandidateProfileSchema = z.object({
     ),
   skills: createSecureStringSchema(10, 1000, "Skills")
     .describe("Comma-separated list of skills"),
-  experienceSummary: createSecureStringSchema(50, 5000, "Experience summary"),
+  experienceSummary: createSecureStringSchema(50, 100000, "Experience summary"),
   locationPreference: createSecureStringSchema(2, 100, "Location preference"),
 });
 export type CandidateProfileInput = z.infer<typeof CandidateProfileSchema>;

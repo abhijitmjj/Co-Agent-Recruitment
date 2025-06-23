@@ -90,6 +90,50 @@ class OrchestratorAgentRunner:
                             event.content.parts[0].text
                             or "Agent returned empty content."
                         )
+                        match event.author:
+                            case "resume_parser_agent":
+
+                                resume_JSON = event.actions.state_delta.get("resume_JSON", final_response_text)
+                                logger.info(
+                                    f"Emitting ParseResumeEvent with final response. {resume_JSON}"
+                                )
+                                await emit_event(
+                                    name="ParseResumeEvent",
+                                    payload={
+                                        "response": parse_dirty_json(
+                                            resume_JSON
+                                        ),
+                                        "user_id": user_id,
+                                        "session_id": active_session_id,
+                                    },
+                                )
+                            case "job_posting_agent":
+                                await emit_event(
+                                    name="ParseJobPostingEvent",
+                                    payload={
+                                        "response": parse_dirty_json(
+                                            final_response_text
+                                        ),
+                                        "user_id": user_id,
+                                        "session_id": active_session_id,
+                                    },
+                                )
+                            case "matcher_agent":
+                                await emit_event(
+                                    name="CompatibilityScoreEvent",
+                                    payload={
+                                        "response": parse_dirty_json(
+                                            final_response_text
+                                        ),
+                                        "user_id": user_id,
+                                        "session_id": active_session_id,
+                                    },
+                                )
+                            case _:
+                                logger.warning(
+                                    f"Unknown agent author: {event.author}. "
+                                    "No specific event emitted."
+                                )
                     logger.info(
                         f"Final response for user '{user_id}': {final_response_text}"
                     )

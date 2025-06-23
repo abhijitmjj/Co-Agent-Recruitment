@@ -1,6 +1,13 @@
 import logging
 from typing import Any, Dict
 from .agent import generate_compatibility_score
+import dotenv
+
+dotenv.load_dotenv()
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 async def generate_compatibility_score_json(
@@ -31,4 +38,6 @@ async def generate_compatibility_score_json(
             "error_type": type(e).__name__,
             "message": str(e),
         }
+
+
 __all__ = ["generate_compatibility_score_json"]

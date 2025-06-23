@@ -1,6 +1,6 @@
 {
   "apphosting": {
-    "backendId": "co-agent-recruitment-backend",
+    "backendId": "a2a-githubaction",
     "rootDir": ".",
     "ignore": [
       "node_modules",
