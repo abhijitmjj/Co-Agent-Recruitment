@@ -91,6 +91,20 @@ All components are stateless and containerized for horizontal scaling. Pub/Sub e
    ```
 5. Open the UI (NextJS frontend) and follow on-screen prompts.
 
+## Debugging
+
+A VS Code launch configuration has been added at `.vscode/launch.json`:
+
+- **Debug TypeScript File**: runs and debugs the currently open `.ts` file using `ts-node`.
+- **Debug JavaScript File**: runs and debugs the currently open `.js` file with Node.
+
+Make sure to install `ts-node` as a development dependency:
+```bash
+npm install --save-dev ts-node
+```
+
+Select the desired configuration from the Run and Debug panel in VS Code.
+
 ## Project Structure
 
 ```

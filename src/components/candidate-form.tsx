@@ -7,6 +7,7 @@ import { CandidateProfileSchema, type CandidateProfileInput } from '@/lib/schema
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {v4 as uuidv4} from 'uuid';
 import {
   Card,
   CardContent,
@@ -36,10 +37,12 @@ import {
 import { Users, Sparkles, Briefcase, Loader2 } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
 import ResumeUploader from '@/components/resume-uploader';
+import { useSession } from 'next-auth/react';
 
 export default function CandidateForm() {
   const { toast } = useToast();
   const { addCandidate, jobs } = useAppContext();
+  const { data: session } = useSession();
 
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [submittedProfile, setSubmittedProfile] = useState<Candidate | null>(
@@ -74,8 +77,10 @@ export default function CandidateForm() {
       toast({ title: 'Summary Error', description: summaryResult.error || 'Failed to summarize profile. Using manual summary.', variant: 'destructive' });
     }
 
-    const newCandidateId = `cand_${Date.now()}`;
-    const newCandidate: Candidate = { ...data, id: newCandidateId, aiSummary: finalSummary };
+    const user_id = session?.user?.id || `cand_${Date.now()}`;
+    const user_email = session?.user?.email || ''; // Get email from session
+    const session_id = uuidv4(); // Generate a unique session ID
+    const newCandidate: Candidate = { ...data, id: user_id, aiSummary: finalSummary, user_email };
     addCandidate(newCandidate);
     setSubmittedProfile(newCandidate);
     toast({ title: 'Profile Submitted', description: 'Your profile has been successfully submitted.' });
@@ -86,8 +91,8 @@ export default function CandidateForm() {
     setIsLoadingMatches(false);
     setIsSubmitted(true);
     // Publish an event after successful submission
-    await publishQueryAction(finalSummary, newCandidateId, Date.now().toString());
-    // await publishEventAction("candidate_submitted", newCandidate);
+    await publishQueryAction(finalSummary, user_id, session_id);
+    await publishEventAction("candidate_submitted", newCandidate);
   };
 
   const handleBackToForm = () => {

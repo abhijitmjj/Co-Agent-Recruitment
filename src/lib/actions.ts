@@ -45,6 +45,7 @@ export interface Job extends JobDescriptionInput {
 export interface Candidate extends CandidateProfileInput {
   id: string;
   aiSummary?: string;
+  user_email?: string; // Example additional field
 }
 
 // Type guards for robust validation
