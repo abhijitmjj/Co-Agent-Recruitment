@@ -12,7 +12,8 @@
       "alwaysAllow": [
         "search_A2A_documentation",
         "search_A2A_code",
-        "fetch_A2A_documentation"
+        "fetch_A2A_documentation",
+        "fetch_generic_url_content"
       ]
     },
     "adk-python Docs": {

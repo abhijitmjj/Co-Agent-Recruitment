@@ -30,9 +30,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Note: Turbopack is the default bundler in Next.js ≥ 13 for the app
-  // directory. Removing the custom Webpack override keeps the build fully
-  // compatible with Turbopack and eliminates the runtime warning.
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [...config.externals, 'handlebars', 'express'];
+    }
+    return config;
+  }
 };
 
 export default nextConfig;

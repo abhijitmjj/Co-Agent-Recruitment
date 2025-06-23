@@ -13,7 +13,7 @@ import {
   User,
   signInWithCustomToken,
 } from 'firebase/auth';
-import { auth } from '../lib/firebase-client';
+import { getFirebase } from '../lib/firebase-client';
 import { useSession } from 'next-auth/react';
 
 type AuthContextValue = {
@@ -31,6 +31,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const { auth } = getFirebase();
 
   const signIn = async () => {
     console.debug('[AuthContext] Firebase: requesting custom token');
@@ -65,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     return unsubscribe;
-  }, [nextStatus, user]);
+  }, [nextStatus, user, auth, signIn]);
 
   const value = useMemo<AuthContextValue>(
     () => ({ user, loading, signIn }),

@@ -1,7 +1,7 @@
-import { getApps, getApp, initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getApps, getApp, initializeApp, FirebaseApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, GithubAuthProvider, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -23,30 +23,25 @@ console.debug('[firebase-client] firebaseConfig:', {
 });
 
 // Prevent double-initialisation in dev/HMR
-// Prevent double-initialisation in dev/HMR
-export const firebaseApp =
-  getApps().length
-    ? (console.debug('[firebase-client] Using existing Firebase app'), getApp())
-    : (console.debug('[firebase-client] Initializing new Firebase app'), initializeApp(firebaseConfig));
+let firebaseApp: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
 
-export const auth = (() => {
-  const instance = getAuth(firebaseApp);
-  console.debug('[firebase-client] Auth initialized:', instance);
-  return instance;
-})();
+function getFirebase() {
+  if (!auth) {
+    auth = getAuth(firebaseApp);
+  }
+  if (!db) {
+    db = getFirestore(firebaseApp);
+  }
+  if (!storage) {
+    storage = getStorage(firebaseApp);
+  }
+  return { firebaseApp, auth, db, storage };
+}
 
-export const google = new GoogleAuthProvider();
-export const github = new GithubAuthProvider();
-export { firebaseConfig };
+const google = new GoogleAuthProvider();
+const github = new GithubAuthProvider();
 
-export const db = (() => {
-  const instance = getFirestore(firebaseApp);
-  console.debug('[firebase-client] Firestore initialized:', instance);
-  return instance;
-})();
-
-export const storage = (() => {
-  const instance = getStorage(firebaseApp);
-  console.debug('[firebase-client] Storage initialized for bucket:', firebaseConfig.storageBucket, instance);
-  return instance;
-})();
+export { getFirebase, firebaseApp, auth, db, storage, google, github, firebaseConfig };
