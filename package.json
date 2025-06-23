@@ -2,6 +2,9 @@
   "name": "nextn",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "bun": ">=1.0"
+  },
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
     "dev:backend": "uvicorn co_agent_recruitment.app:app --reload",

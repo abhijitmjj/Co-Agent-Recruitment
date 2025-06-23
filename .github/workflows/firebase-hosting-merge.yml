@@ -12,8 +12,14 @@ jobs:
     environment: GITHUB_CLIENT_ID
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci && npm run build && cp apphosting.yaml .next/apphosting.yaml && cp
-          -R .next public
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v3
+      - name: Install dependencies & build
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+          cp apphosting.yaml .next/apphosting.yaml
+          cp -R .next public
         env:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}

@@ -89,7 +89,12 @@ All components are stateless and containerized for horizontal scaling. Pub/Sub e
    ```bash
    uvicorn standalone_server:app --reload
    ```
-5. Open the UI (NextJS frontend) and follow on-screen prompts.
+5. Install dependencies and start the NextJS frontend:
+   ```bash
+   bun install
+   bun run dev
+   ```
+6. Open the UI at http://localhost:9002 and follow on-screen prompts.
 
 ## Debugging
 
