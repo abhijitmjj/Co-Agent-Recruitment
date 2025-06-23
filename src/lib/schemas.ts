@@ -49,7 +49,7 @@ export const CandidateProfileSchema = z.object({
     ),
   skills: createSecureStringSchema(10, 1000, "Skills")
     .describe("Comma-separated list of skills"),
-  experienceSummary: createSecureStringSchema(50, 10000, "Experience summary"),
+  experienceSummary: createSecureStringSchema(50, 100000, "Experience summary"),
   locationPreference: createSecureStringSchema(2, 100, "Location preference"),
 });
 export type CandidateProfileInput = z.infer<typeof CandidateProfileSchema>;

@@ -92,11 +92,16 @@ class OrchestratorAgentRunner:
                         )
                         match event.author:
                             case "resume_parser_agent":
+
+                                resume_JSON = event.actions.state_delta.get("resume_JSON", final_response_text)
+                                logger.info(
+                                    f"Emitting ParseResumeEvent with final response. {resume_JSON}"
+                                )
                                 await emit_event(
                                     name="ParseResumeEvent",
                                     payload={
                                         "response": parse_dirty_json(
-                                            final_response_text
+                                            resume_JSON
                                         ),
                                         "user_id": user_id,
                                         "session_id": active_session_id,
