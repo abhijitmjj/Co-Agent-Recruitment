@@ -30,12 +30,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals = [...config.externals, 'handlebars', 'express'];
-    }
-    return config;
-  }
+  // webpack: (config, { isServer }) => {
+  //   if (isServer) {
+  //     config.externals = [...config.externals, 'handlebars', 'express'];
+  //   }
+  //   return config;
+  // }
 };
 
 export default nextConfig;
