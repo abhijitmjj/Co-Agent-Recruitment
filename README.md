@@ -74,6 +74,182 @@ Outlined in the project [blueprint](docs/blueprint.md):【F:docs/blueprint.md†
 
 All components are stateless and containerized for horizontal scaling. Pub/Sub ensures backpressure management and elasticity under load.
 
+```mermaid
+graph TB
+    subgraph "Frontend / UI Layer"
+        UI[Recruiter UI<br/>Next.js App]
+        API[REST API<br/>FastAPI/Express]
+    end
+
+    subgraph "Orchestration Layer"
+        ORCH[Orchestrator Agent<br/>ADK Framework]
+        RUNNER[OrchestratorAgentRunner<br/>Session Management]
+        SESS[InMemorySessionService<br/>Session Persistence]
+    end
+
+    subgraph "Core Agents"
+        RESUME[Resume Parser Agent<br/>Pydantic + Gemini]
+        JOB[Job Posting Agent<br/>Pydantic + Gemini]
+        MATCH[Matcher Agent<br/>Compatibility Scoring]
+    end
+
+    subgraph "Communication Layer"
+        PUBSUB[Google Cloud Pub/Sub<br/>Event Bus]
+        EVENTS[Event Types:<br/>• ParseResumeEvent<br/>• ParseJobPostingEvent<br/>• CompatibilityScoreEvent]
+    end
+
+    subgraph "External Services"
+        VERTEX[Google Vertex AI<br/>Gemini Models]
+        FIRESTORE[Google Firestore<br/>Data Storage]
+        FIREBASE[Firebase Auth<br/>User Management]
+        GCFUNC[Google Cloud Functions<br/>Firestore Saver]
+    end
+
+    subgraph "Agentic Tools"
+        EMIT[emit_event<br/>Pub/Sub Publisher]
+        RECV[receive_events<br/>Pub/Sub Consumer]
+        PARSE[parse_dirty_json<br/>JSON Parser]
+        SAVE[save_to_firestore<br/>Data Persistence]
+    end
+
+    %% Frontend connections
+    UI --> API
+    API --> RUNNER
+
+    %% Orchestration connections
+    RUNNER --> ORCH
+    ORCH --> SESS
+    ORCH --> RESUME
+    ORCH --> JOB
+    ORCH --> MATCH
+
+    %% Agent connections
+    RESUME --> VERTEX
+    JOB --> VERTEX
+    MATCH --> VERTEX
+
+    %% Event publishing
+    RUNNER --> EMIT
+    EMIT --> PUBSUB
+    PUBSUB --> EVENTS
+
+    %% Data flow
+    PUBSUB --> GCFUNC
+    GCFUNC --> FIRESTORE
+
+    %% Tool usage
+    RESUME --> PARSE
+    JOB --> PARSE
+    MATCH --> PARSE
+    GCFUNC --> SAVE
+
+    %% External services
+    UI --> FIREBASE
+    FIRESTORE --> VERTEX
+
+    %% Styling
+    classDef frontend fill:#e1f5fe
+    classDef orchestration fill:#f3e5f5
+    classDef agents fill:#e8f5e8
+    classDef communication fill:#fff3e0
+    classDef external fill:#fce4ec
+    classDef tools fill:#f1f8e9
+
+    class UI,API frontend
+    class ORCH,RUNNER,SESS orchestration
+    class RESUME,JOB,MATCH agents
+    class PUBSUB,EVENTS communication
+    class VERTEX,FIRESTORE,FIREBASE,GCFUNC external
+    class EMIT,RECV,PARSE,SAVE tools
+```
+
+
+## Event Flow
+
+```mermaid
+sequenceDiagram
+    participant UI as Recruiter UI
+    participant API as REST API
+    participant RUNNER as OrchestratorAgentRunner
+    participant ORCH as Orchestrator Agent
+    participant RESUME as Resume Parser Agent
+    participant JOB as Job Posting Agent
+    participant MATCH as Matcher Agent
+    participant PUBSUB as Google Cloud Pub/Sub
+    participant FIRESTORE as Firestore Database
+    participant GCFUNC as Cloud Function
+
+    Note over UI,GCFUNC: Candidate-Job Match Flow: End-to-End
+
+    %% Step 1: Job Collection
+    UI->>+API: POST /parse-job-posting
+    Note over UI,API: Recruiter submits job description
+    
+    API->>+RUNNER: run_async(user_id, job_posting_text)
+    RUNNER->>+ORCH: Route to job_posting_agent
+    
+    ORCH->>+JOB: analyze_job_posting(job_text)
+    Note over JOB: Gemini model extracts:<br/>• Job title, requirements<br/>• Skills, location<br/>• Company details
+    JOB-->>-ORCH: Structured job posting JSON
+    
+    ORCH-->>-RUNNER: Job posting data + session info
+    RUNNER->>PUBSUB: emit_event("ParseJobPostingEvent", payload)
+    PUBSUB->>GCFUNC: Event trigger
+    GCFUNC->>FIRESTORE: Save to jobs/{jobId}
+    
+    RUNNER-->>-API: Job posting analysis response
+    API-->>-UI: Display parsed job posting
+
+    %% Step 2: Candidate Collection  
+    UI->>+API: POST /parse-resume
+    Note over UI,API: Recruiter submits candidate resume
+    
+    API->>+RUNNER: run_async(user_id, resume_text)
+    RUNNER->>+ORCH: Route to parse_resume_agent
+    
+    ORCH->>+RESUME: parse_resume(resume_text)
+    Note over RESUME: Gemini model extracts:<br/>• Personal details<br/>• Skills, experience<br/>• Education, certifications
+    RESUME-->>-ORCH: Structured resume JSON
+    
+    ORCH-->>-RUNNER: Resume data + session info
+    RUNNER->>PUBSUB: emit_event("ParseResumeEvent", payload)
+    PUBSUB->>GCFUNC: Event trigger
+    GCFUNC->>FIRESTORE: Save to candidates/{candidateId}
+    
+    RUNNER-->>-API: Resume parsing response
+    API-->>-UI: Display parsed resume
+
+    %% Step 3: Match Creation
+    UI->>+API: POST /generate-match
+    Note over UI,API: Request compatibility analysis<br/>with job_id & candidate_id
+    
+    API->>FIRESTORE: Query job and candidate data
+    FIRESTORE-->>API: Retrieved structured data
+    
+    API->>+RUNNER: run_async(user_id, match_request)
+    RUNNER->>+ORCH: Route to matcher_agent
+    
+    ORCH->>+MATCH: generate_compatibility_score(resume_data, job_data)
+    Note over MATCH: Gemini analyzes:<br/>• Skill alignment<br/>• Experience relevance<br/>• Qualification match
+    MATCH-->>-ORCH: Compatibility score (0-100) + analysis
+    
+    ORCH-->>-RUNNER: Match results + session info
+    RUNNER->>PUBSUB: emit_event("CompatibilityScoreEvent", payload)
+    PUBSUB->>GCFUNC: Event trigger
+    GCFUNC->>FIRESTORE: Save to matches/{matchId}
+    
+    RUNNER-->>-API: Compatibility analysis response
+    API-->>-UI: Display match score & insights
+
+    %% Step 4: Future Enhancement (Interview Scheduling)
+    Note over UI,GCFUNC: Future: Interview Agent Integration
+    rect rgb(240, 240, 240)
+        Note over FIRESTORE: When match score > threshold
+        FIRESTORE->>GCFUNC: Trigger interview_agent
+        Note over GCFUNC: Would integrate with:<br/>• Calendar APIs<br/>• Email notifications<br/>• Interview scheduling
+    end
+```
+
 ## Getting Started
 
 1. Clone the repository and navigate into the project root.
