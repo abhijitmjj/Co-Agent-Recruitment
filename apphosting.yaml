@@ -6,8 +6,8 @@ runConfig:
   # concurrency: 80
   # cpu: 1
   # memoryMiB: 512
-
-  # Environment variables and secrets.
+# GRANT access via: npx firebase apphosting:secrets:grantaccess NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN --backend a2a-githubaction
+# Environment variables and secrets.
 env:
   # Grant access to secrets in Cloud Secret Manager.
   # These will be available as environment variables:
@@ -23,12 +23,12 @@ env:
       - RUNTIME # Secrets are typically only needed at runtime
       - BUILD # If you need them during the build process as well
   - variable: GITHUB_CLIENT_ID
-    secret: projects/605555306967/secrets/DEV_GITHUB_CLIENT_ID # Replace with your Secret Manager secret name/ref
+    secret: projects/605555306967/secrets/GITHUB_CLIENT_ID # Replace with your Secret Manager secret name/ref
     availability:
       - BUILD
       - RUNTIME
   - variable: GITHUB_CLIENT_SECRET
-    secret: projects/605555306967/secrets/DEV_GITHUB_CLIENT_SECRET # Replace with your Secret Manager secret name/ref
+    secret: projects/605555306967/secrets/GITHUB_CLIENT_SECRET # Replace with your Secret Manager secret name/ref
     availability:
       - RUNTIME
       - BUILD
@@ -38,7 +38,7 @@ env:
       - RUNTIME
       - BUILD
   - variable: NEXTAUTH_URL
-    value: https://co-agent-recruitment-backend--gen-lang-client-0249131775.us-central1.hosted.app # <-- IMPORTANT: Replace this with your actual Firebase App URL
+    value: https://a2a-githubaction--gen-lang-client-0249131775.us-central1.hosted.app # <-- IMPORTANT: Replace this with your actual Firebase App URL
     availability:
       - BUILD
       - RUNTIME
@@ -51,6 +51,42 @@ env:
     availability:
       - RUNTIME
       - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_API_KEY # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_PROJECT_ID # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_APP_ID # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    secret: projects/605555306967/secrets/NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID # Replace with your Secret Manager secret name/ref
+    availability:
+      - RUNTIME
+      - BUILD
+  
   # Example of a non-secret environment variable:
   # - variable: NODE_ENV
   #   value: production # Or dynamically set based on your needs
