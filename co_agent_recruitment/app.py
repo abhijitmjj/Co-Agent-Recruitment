@@ -5,6 +5,7 @@ This module provides both a FastAPI web interface and CLI interface for the resu
 
 import asyncio
 import sys
+import json
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -99,9 +100,19 @@ class EventRequest(BaseModel):
 
 class OrchestratorRequest(BaseModel):
     """Request model for the orchestrator agent."""
-    query: str = Field(..., description="The query to send to the orchestrator agent")
-    user_id: str = Field(..., description="The user ID for the session")
-    session_id: Optional[str] = Field(None, description="The session ID to use")
+    user_id: str = Field(..., description="User identifier for the session.")
+    session_id: Optional[str] = Field(None, description="Existing session ID, if any.")
+    input_type: str = Field(..., description="Type of input: 'resume', 'job_posting', or 'match_request'.")
+    text_input: Optional[str] = Field(None, description="Raw text input for resume or job posting.", max_length=50000)
+    candidate_id: Optional[str] = Field(None, description="Candidate ID for matching.")
+    job_id: Optional[str] = Field(None, description="Job ID for matching.")
+
+
+class OrchestratorResponse(BaseModel):
+    """Response model for the orchestrator agent, expecting a dictionary which is the parsed JSON from agent."""
+    success: bool = Field(..., description="Indicates if the orchestrator call was successful.")
+    response: Dict[str, Any] = Field(..., description="The structured JSON response from the orchestrator agent.")
+    error: Optional[str] = Field(None, description="Error message if the call failed.")
 
 
 class MatcherRequest(BaseModel):
@@ -312,24 +323,56 @@ async def publish_event_endpoint(request: EventRequest):
         )
 
 
-@app.post("/orchestrator")
-async def orchestrator_endpoint(request: OrchestratorRequest):
-    """
-    Route a query to the orchestrator agent.
-    """
+# Initialize the agent runner globally
+agent_runner = get_agent_runner() # This should initialize your OrchestratorAgentRunner
+
+@app.post(
+    "/orchestrator",
+    response_model=OrchestratorResponse,
+    tags=["ADK Orchestrator"],
+)
+async def run_orchestrator_agent_endpoint(request: OrchestratorRequest) -> Any:
+    """Endpoint to interact with the ADK orchestrator agent."""
+    # logger.info(f"Received orchestrator request for user_id: {request.user_id}, input_type: {request.input_type}")
+
+    # Construct the JSON query string for the agent based on OrchestratorRequest fields
+    agent_query_payload = {
+        "input_type": request.input_type,
+        "text_input": request.text_input,
+        "candidate_id": request.candidate_id,
+        "job_id": request.job_id
+    }
+    # Remove None values to keep the JSON clean
+    agent_query_payload = {k: v for k, v in agent_query_payload.items() if v is not None}
+    agent_query_json_string = json.dumps(agent_query_payload)
+
+    # logger.debug(f"Constructed agent query JSON string: {agent_query_json_string}")
+
     try:
-        runner = get_agent_runner()
-        response = await runner.run_async(
-            user_id=request.user_id,
-            query=request.query,
-            session_id=request.session_id,
+        # The runner.run_async now returns a dictionary (parsed JSON from agent)
+        agent_final_dict_response = await agent_runner.run_async(
+            user_id=request.user_id, 
+            query=agent_query_json_string, # Pass the constructed JSON string as the query 
+            session_id=request.session_id
         )
-        return {"success": True, "response": response}
+        # logger.info(f"Orchestrator agent raw dictionary response: {agent_final_dict_response}")
+
+        if isinstance(agent_final_dict_response, dict) and agent_final_dict_response.get("error"):
+            # logger.error(f"Orchestrator agent returned an error: {agent_final_dict_response.get('error')}")
+            # Return a 500 error if the agent itself reported an error in its processed response
+            # Or, if the error is from the runner (e.g., parsing agent's text output failed)
+            return OrchestratorResponse(
+                success=False, 
+                response=agent_final_dict_response, # Send back the error structure from agent/runner
+                error=agent_final_dict_response.get("details", "Agent processing failed.")
+            )
+        
+        # If no error key, assume success and the dict is the desired payload
+        return OrchestratorResponse(success=True, response=agent_final_dict_response)
+    
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail={"success": False, "error": f"Failed to run orchestrator: {str(e)}"},
-        )
+        # logger.error(f"Unhandled exception in /orchestrator endpoint: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post(

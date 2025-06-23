@@ -96,26 +96,52 @@ async def orchestrator_after_callback(callback_context: CallbackContext) -> None
 
 def create_orchestrator_agent() -> Agent:
     """Create an orchestrator agent that manages the resume parsing and job posting agents with session management."""
+    instruction_text = (
+        "You are an orchestrator agent. Your primary role is to call specialized sub-agents "
+        "(parse_resume_agent, job_posting_agent, matcher_agent) based on the user's query. "
+        "The user's query will be a JSON string. This JSON string will contain an 'input_type' "
+        "('resume', 'job_posting', or 'match_request'), 'text_input' (for resume or job_posting), "
+        "and optionally 'candidate_id' and 'job_id' (for match_request).\n\n"
+        "After receiving a structured result (typically a Python dictionary or JSON object) from a sub-agent, "
+        "you MUST combine this result with session information. "
+        "The session information is available to you in your state under the key 'current_session_info'.\n\n"
+        "Your FINAL output MUST be a single, valid JSON string. This JSON string should have two top-level keys:\n"
+        "1. A key representing the sub-agent's primary output (e.g., 'resume_parser_result', 'job_posting_result', or 'match_result'). "
+        "   The value for this key will be the structured data returned by the sub-agent.\n"
+        "2. A key named 'session_information'. The value for this key will be the object found in your state at 'current_session_info'.\n\n"
+        "Example for a job posting input query like '{\"text_input\": \"Software Engineer...\", \"input_type\": \"job_posting\"}' :\n"
+        "If job_posting_agent returns: {'title': 'Engineer', 'skills': ['Python']}\n"
+        "And current_session_info from your state is: {'session_id': '123', 'user_id': 'abc'}\n"
+        "Your final output (a JSON string) should be exactly like this (ensure proper JSON string escaping for the entire output string):\n"
+        "'{ \"job_posting_result\": { \"title\": \"Engineer\", \"skills\": [\"Python\"] }, \"session_information\": { \"session_id\": \"123\", \"user_id\": \"abc\" } }'\n\n" # Note: Corrected example JSON string
+        "Steps based on 'input_type' from the user's JSON query:\n"
+        "IF 'input_type' is 'job_posting':\n"
+        "1. Extract 'text_input' from the user's JSON query and call 'job_posting_agent' with it.\n"
+        "2. Let its result be 'job_agent_output'.\n"
+        "3. Retrieve 'current_session_info' from your state.\n"
+        "4. Construct your final response as the JSON string: '{ \"job_posting_result\": job_agent_output, \"session_information\": current_session_info }'.\n\n"
+        "IF 'input_type' is 'resume':\n"
+        "1. Extract 'text_input' from the user's JSON query and call 'parse_resume_agent' with it.\n"
+        "2. Let its result be 'resume_agent_output'.\n"
+        "3. Retrieve 'current_session_info' from your state.\n"
+        "4. Construct your final response as the JSON string: '{ \"resume_parser_result\": resume_agent_output, \"session_information\": current_session_info }'.\n\n"
+        "IF 'input_type' is 'match_request':\n"
+        "1. Extract 'candidate_id' and 'job_id' from the user's JSON query.\n"
+        "2. Call 'matcher_agent' with these IDs.\n"
+        "3. Let its result be 'match_output'.\n"
+        "4. Retrieve 'current_session_info' from your state.\n"
+        "5. Construct your final response as the JSON string: '{ \"match_result\": match_output, \"session_information\": current_session_info }'.\n\n"
+        "Ensure the sub-agent results (which are dictionaries) are correctly embedded as JSON objects within your final JSON string output. Do not add any extra text outside this JSON string."
+    )
     return Agent(
         name="orchestrator_agent",
         model=get_model_name(),
-        description="Orchestrates the resume parsing and job posting agents. Dispatches work to the appropriate agents based on user input. Returns structured JSON data with session information.",
-        instruction=(
-            "You are an orchestrator agent that manages resume parsing and job posting parsing with session management. "
-            "Your role is to call the appropriate specialized agent and return the structured JSON data WITH session information.\\n\\n"
-            "IMPORTANT: You must ALWAYS include session information in your response.\\n\\n"
-            "When the user provides a resume:\\n"
-            "1. Call the parse_resume_agent with the resume text\\n"
-            "2. Get the result from parse_resume_agent\\n"
-            "3. Add orchestrator session information to the response\\n"
-            "4. Return the complete JSON with both parse results and session data\\n\\n"
-            "When the user provides a job posting:\\n"
-            "1. Call the job_posting_agent with the job posting text\\n"
-            "2. Get the result from job_posting_agent\\n"
-            "3. Add orchestrator session information to the response\\n"
-            "4. Return the complete JSON with both job posting results and session data\\n\\n"
-            "When both a resume and job posting are available, call the matcher_agent to get a compatibility score.\\n"
+        description=(
+            "Orchestrates resume parsing, job posting parsing, and candidate-job matching. "
+            "Dispatches work to appropriate sub-agents. Retrieves session information from its state. "
+            "Returns a final JSON string containing the sub-agent's result and session information."
         ),
+        instruction=instruction_text,
         sub_agents=[parse_resume_agent, job_posting_agent, matcher_agent],
         output_key="result",
         before_agent_callback=orchestrator_before_callback,

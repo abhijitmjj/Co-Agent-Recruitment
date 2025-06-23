@@ -1,5 +1,3 @@
-
-
 import { summarizeCandidateProfile, type SummarizeCandidateProfileInput } from '@/ai/flows/summarize-candidate-profile';
 import { generateSEOKeywords, type GenerateSEOKeywordsInput } from '@/ai/flows/generate-seo-keywords';
 import { suggestJobTitles, type SuggestJobTitlesInput } from '@/ai/flows/suggest-job-titles';
@@ -36,10 +34,60 @@ export async function generateSEOKeywordsAction(input: GenerateSEOKeywordsInput)
   }
 }
 
+export async function processJobWithOrchestratorAction(params: {
+  jobText: string;
+  user_id: string;
+  session_id: string;
+  jobId: string;
+}): Promise<{ success: boolean; data?: any; error?: string }> {
+  const { jobText, user_id, session_id, jobId } = params;
+  try {
+    // Assuming the Python ADK orchestrator is running on localhost:8000
+    // and can receive job text via the /orchestrator endpoint
+    const response = await fetch('http://localhost:8000/orchestrator', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: jobText, // Sending jobText as the 'query'
+        user_id: user_id,
+        session_id: session_id,
+        job_id: jobId, // Sending jobId for context
+        input_type: 'job_posting' // Explicitly stating the input type
+      }),
+    });
+
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        // If response is not JSON, use text
+        errorData = { error: await response.text() };
+      }
+      console.error('Error response from orchestrator:', errorData);
+      throw new Error(errorData.error || `Failed to process job posting with orchestrator. Status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    // The orchestrator for a job posting should return structured job data.
+    // Example: result might be { success: true, data: { structuredJobData: {...}, processedSummary: \"...\" } }
+    // We directly return the orchestrator's response structure.
+    return { success: true, data: result.response || result }; // Adapt based on actual orchestrator response structure
+  } catch (error) {
+    console.error(`Error processing job with orchestrator:`, error);
+    return { success: false, error: error instanceof Error ? error.message : `Unknown error processing job with orchestrator` };
+  }
+}
+
 // Placeholder types for shared state, ideally these would be more complex and stored in a DB
 export interface Job extends JobDescriptionInput {
   id: string;
   companyName?: string; // Example additional field
+  user_id: string; 
+  session_id: string; 
+  processedDataFromOrchestrator?: any; 
 }
 
 export interface Candidate extends CandidateProfileInput {

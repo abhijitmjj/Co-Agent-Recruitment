@@ -13,12 +13,22 @@ import { Label } from '@/components/ui/label'; // Keep if used, but FormLabel is
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { getSuggestedJobTitlesAction, generateSEOKeywordsAction, performMatchmakingAction, type Candidate, type Job } from '@/lib/actions';
+import { 
+  getSuggestedJobTitlesAction, 
+  generateSEOKeywordsAction, 
+  performMatchmakingAction, 
+  type Candidate, 
+  type Job,
+  publishEventAction, 
+  publishQueryAction,
+  processJobWithOrchestratorAction // Ensure this is imported from @/lib/actions
+} from '@/lib/actions';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Briefcase, Lightbulb, Search, Sparkles, UserCheck, Loader2, Eye } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Link from 'next/link';
+import { useSession } from 'next-auth/react'; // Ensured import
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -26,6 +36,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 export default function CompanyPage() {
   const { toast } = useToast();
   const { addJob, candidates, jobs, getCandidateById } = useAppContext();
+  const { data: session } = useSession(); // Get session data
   
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
@@ -34,6 +45,7 @@ export default function CompanyPage() {
   const [isLoadingSeo, setIsLoadingSeo] = useState(false);
   const [potentialMatches, setPotentialMatches] = useState<Awaited<ReturnType<typeof performMatchmakingAction>>>([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
+  const [isProcessingOrchestrator, setIsProcessingOrchestrator] = useState(false); // Ensured state variable
 
   const [selectedCandidateDetail, setSelectedCandidateDetail] = useState<Candidate | null>(null);
   const [isCandidateDetailModalOpen, setIsCandidateDetailModalOpen] = useState(false);
@@ -67,14 +79,63 @@ export default function CompanyPage() {
 
   const onSubmit: SubmitHandler<JobDescriptionInput> = async (data) => {
     const newJobId = `job_${Date.now()}`;
-    const newJob: Job = { ...data, id: newJobId, companyName: "Your Company" }; // Assuming a default company name
-    addJob(newJob);
-    setSubmittedJob(newJob); // Set this to display the newly submitted job's details and matches
-    toast({ title: 'Job Submitted', description: 'Your job description has been successfully submitted.' });
-    form.reset();
-    setSuggestedTitles([]); // Clear suggestions after submission
+    const user_id = session?.user?.email || 'anonymous_company_user';
+    const session_id = session?.user?.id || Date.now().toString();
 
-    // Generate SEO Keywords
+    setIsProcessingOrchestrator(true); // Set loading state for orchestrator
+
+    // Combine job details into a single text for the orchestrator
+    const jobTextForOrchestrator = `Job Title: ${data.jobTitle}\\nResponsibilities: ${data.responsibilities}\\nRequired Skills: ${data.requiredSkills}`;
+
+    // 1. Call the action to process the job posting via the ADK orchestrator
+    const orchestratorResult = await processJobWithOrchestratorAction({
+      jobText: jobTextForOrchestrator,
+      user_id,
+      session_id,
+      jobId: newJobId,
+    });
+
+    setIsProcessingOrchestrator(false); // Clear loading state for orchestrator
+
+    if (!orchestratorResult.success) {
+      toast({
+        title: 'Orchestrator Processing Error',
+        description: orchestratorResult.error || 'Failed to process job posting via orchestrator.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    toast({ title: 'Job Posting Processed by AI', description: 'AI has processed the job details via orchestrator.' });
+
+    // Create the newJob object with orchestrator data
+    const newJob: Job = { 
+      ...data, 
+      id: newJobId, 
+      companyName: session?.user?.name || "Your Company", // Use session name or default
+      user_id, // Included from Job type update
+      session_id, // Included from Job type update
+      processedDataFromOrchestrator: orchestratorResult.data // Included from Job type update
+    };
+    
+    addJob(newJob);
+    setSubmittedJob(newJob); 
+    
+    // 2. Publish events after successful orchestrator processing and local update
+    try {
+      await publishEventAction("job_description_submitted", newJob);
+      const queryText = data.responsibilities || jobTextForOrchestrator; // Use responsibilities or full text for query
+      await publishQueryAction(queryText, newJobId, session_id);
+      toast({ title: 'Job Submitted & Published', description: 'Your job description has been successfully submitted and published to event stream.' });
+    } catch (error) {
+      console.error("Failed to publish job events:", error);
+      toast({ title: 'Event Publishing Error', description: 'Failed to publish job events.', variant: 'destructive' });
+    }
+    
+    form.reset();
+    setSuggestedTitles([]);
+
+    // Generate SEO Keywords (can run after main submission logic
     setIsLoadingSeo(true);
     const seoResult = await generateSEOKeywordsAction({
       jobTitle: data.jobTitle,
@@ -180,8 +241,13 @@ export default function CompanyPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" size="lg" className="w-full bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  className="w-full bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105" 
+                  disabled={form.formState.isSubmitting || isLoadingSuggestions || isProcessingOrchestrator || isLoadingSeo || isLoadingMatches} // Added isProcessingOrchestrator
+                >
+                  {(form.formState.isSubmitting || isProcessingOrchestrator) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />} {/* Updated loading condition */}
                   Submit Job & Find Matches
                 </Button>
               </form>
@@ -198,12 +264,49 @@ export default function CompanyPage() {
           <Card className="shadow-lg bg-card/80 border-primary/30">
             <CardHeader>
               <CardTitle className="font-headline text-xl">{submittedJob.jobTitle}</CardTitle>
+              {/* Display user_id and session_id if they exist on submittedJob */}
+              <CardDescription className="font-code text-sm"> 
+                Company: {submittedJob.companyName} 
+                {submittedJob.user_id && `| User ID: ${submittedJob.user_id}`}
+                {submittedJob.session_id && ` | Session ID: ${submittedJob.session_id}`}
+              </CardDescription>
               <CardDescription className="font-code text-sm">Required Skills: {submittedJob.requiredSkills}</CardDescription>
             </CardHeader>
             <CardContent>
               <h4 className="font-semibold mb-1 text-muted-foreground">Responsibilities:</h4>
               <p className="text-sm whitespace-pre-line font-code">{submittedJob.responsibilities}</p>
               
+              {/* Display orchestrator processed data if available */}
+              {submittedJob.processedDataFromOrchestrator && (
+                <div className="mt-4 p-3 rounded-md bg-muted/30 border border-input">
+                  <h5 className="font-semibold text-sm text-primary mb-1">AI Orchestrator Insights:</h5>
+                  {/* @ts-ignore next-line */}
+                  {submittedJob.processedDataFromOrchestrator.job_posting_result && (
+                    <pre className="text-xs italic text-muted-foreground bg-black/10 p-2 rounded overflow-x-auto">
+                      {/* @ts-ignore next-line */}
+                      {JSON.stringify(submittedJob.processedDataFromOrchestrator.job_posting_result, null, 2)}
+                    </pre>
+                  )}
+                  {/* @ts-ignore next-line */}
+                  {submittedJob.processedDataFromOrchestrator.session_information && (
+                    <details className="mt-2 text-xs"><summary className="cursor-pointer">View Session Info (from Orchestrator)</summary>
+                      <pre className="text-xs italic text-muted-foreground bg-black/10 p-2 rounded overflow-x-auto mt-1">
+                        {/* @ts-ignore next-line */}
+                        {JSON.stringify(submittedJob.processedDataFromOrchestrator.session_information, null, 2)}
+                      </pre>
+                    </details>
+                  )}
+                  {/* Fallback if the structure is different, e.g., older mock */}
+                  {/* @ts-ignore next-line */}
+                  {!submittedJob.processedDataFromOrchestrator.job_posting_result && !submittedJob.processedDataFromOrchestrator.session_information && (
+                     <pre className="text-xs italic text-muted-foreground bg-black/10 p-2 rounded overflow-x-auto">
+                        {/* @ts-ignore next-line */}
+                        {JSON.stringify(submittedJob.processedDataFromOrchestrator, null, 2)}
+                     </pre>
+                  )}
+                </div>
+              )}
+
               {isLoadingSeo && <div className="flex items-center mt-4"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating SEO Keywords...</div>}
               {seoKeywords.length > 0 && (
                 <div className="mt-6 p-4 rounded-md bg-muted/50 border border-secondary">
@@ -276,12 +379,10 @@ export default function CompanyPage() {
                         // Scroll to the job details section
                         const jobDetailsElement = document.getElementById('job-details');
                         if (jobDetailsElement) {
-                            jobDetailsElement.scrollIntoView({ behavior: 'smooth' });
-                        } else { // Fallback for older browsers or if ID isn't found immediately
-                           window.scrollTo({ top: (document.getElementById('submit-job')?.offsetHeight || 0) + 100, behavior: 'smooth' });
+                          jobDetailsElement.scrollIntoView({ behavior: 'smooth' });
                         }
-                    }}>
-                        View Details & Matches
+                      }}>
+                       <Sparkles className="mr-2 h-4 w-4" /> Refresh Matches & SEO
                     </Button>
                  </CardFooter>
                </Card>
@@ -290,20 +391,35 @@ export default function CompanyPage() {
          </section>
       )}
 
-      {selectedCandidateDetail && (
-        <Dialog open={isCandidateDetailModalOpen} onOpenChange={setIsCandidateDetailModalOpen}>
-          <DialogContent className="sm:max-w-[600px] bg-card text-card-foreground">
-            <DialogHeader>
-              <DialogTitle className="font-headline text-2xl text-accent">{selectedCandidateDetail.fullName}</DialogTitle>
-              <DialogDescription>
-                Location Preference: {selectedCandidateDetail.locationPreference}
-              </DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="max-h-[60vh] p-1 pr-4">
+      {/* Candidate Detail Modal */}
+      <Dialog open={isCandidateDetailModalOpen} onOpenChange={setIsCandidateDetailModalOpen}>
+        <DialogContent className="max-w-3xl p-6 bg-card text-card-foreground">
+          <DialogHeader>
+            <DialogTitle className="font-headline text-2xl text-accent">{selectedCandidateDetail?.fullName || 'Candidate Details'}</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm">
+              Review the details of the candidate.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] p-1 pr-4">
+            {selectedCandidateDetail ? (
               <div className="space-y-4 py-4">
+                <div>
+                  <h4 className="font-semibold text-primary-foreground mb-1">Full Name:</h4>
+                  <p className="text-sm">{selectedCandidateDetail.fullName}</p>
+                </div>
+                {selectedCandidateDetail.user_email && (
+                  <div>
+                    <h4 className="font-semibold text-primary-foreground mb-1">Email:</h4>
+                    <p className="text-sm">{selectedCandidateDetail.user_email}</p>
+                  </div>
+                )}
                 <div>
                   <h4 className="font-semibold text-primary-foreground mb-1">Skills:</h4>
                   <p className="text-sm font-code bg-muted/30 p-2 rounded-md border border-secondary">{selectedCandidateDetail.skills}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-primary-foreground mb-1">Location Preference:</h4>
+                  <p className="text-sm">{selectedCandidateDetail.locationPreference}</p>
                 </div>
                 {selectedCandidateDetail.aiSummary && (
                   <div>
@@ -316,17 +432,19 @@ export default function CompanyPage() {
                   <p className="text-sm whitespace-pre-line font-code bg-muted/30 p-3 rounded-md border border-secondary">{selectedCandidateDetail.experienceSummary}</p>
                 </div>
               </div>
-            </ScrollArea>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Close
-                </Button>
-              </DialogClose>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+            ) : (
+              <p>Loading candidate details...</p>
+            )}
+          </ScrollArea>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

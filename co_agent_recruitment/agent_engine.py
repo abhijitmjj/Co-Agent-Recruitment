@@ -44,32 +44,31 @@ class OrchestratorAgentRunner:
 
     async def run_async(
         self, user_id: str, query: str, session_id: Optional[str] = None
-    ) -> str:
+    ) -> dict:  # Changed return type from str to dict
         """
         Runs a query against the orchestrator agent for a given user.
 
         Args:
             user_id: The identifier for the user.
-            query: The user's query for the agent.
+            query: The user's query for the agent (expected to be a JSON string for the orchestrator).
             session_id: The existing session ID, if any.
 
         Returns:
-            The agent's final text response.
+            A dictionary representing the agent's parsed JSON response or an error dictionary.
         """
-        logger.info(f"Received query from user '{user_id}' in session '{session_id}'.")
+        logger.info(f"Received query from user '{user_id}' in session '{session_id}'. Query: {query[:200]}...")
         try:
-            # Get an existing session or create a new one
             active_session_id = await get_or_create_session_for_user(
                 user_id=user_id, session_id=session_id
             )
             logger.info(f"Using session '{active_session_id}' for user '{user_id}'.")
 
-            # Prepare the user's message in ADK format
             content = genai_types.Content(
                 role="user", parts=[genai_types.Part(text=query)]
-            )
+            )  # Query is passed as text to the agent
 
             final_response_text = "Agent did not produce a final response."  # Default
+            agent_response_dict = {"error": final_response_text}  # Default error response
 
             # run_async executes the agent logic and yields Events
             async for event in self.runner.run_async(
@@ -90,62 +89,54 @@ class OrchestratorAgentRunner:
                             event.content.parts[0].text
                             or "Agent returned empty content."
                         )
-                        match event.author:
-                            case "resume_parser_agent":
+                        logger.info(f"Orchestrator agent final_response_text: {final_response_text}")
+                        try:
+                            # The agent's output is expected to be a JSON string
+                            parsed_json_response = parse_dirty_json(final_response_text)
+                            if not isinstance(parsed_json_response, dict):
+                                logger.error(f"Parsed response is not a dictionary: {parsed_json_response}")
+                                agent_response_dict = {"error": "Agent response was not a valid JSON object.", "raw_response": final_response_text}
+                            else:
+                                agent_response_dict = parsed_json_response
+                                logger.info(f"Successfully parsed agent's JSON response: {agent_response_dict}")
+                        except json.JSONDecodeError as e:
+                            logger.error(f"Failed to parse agent's final response as JSON: {e}. Raw response: {final_response_text}")
+                            agent_response_dict = {"error": "Failed to parse agent's JSON response", "details": str(e), "raw_response": final_response_text}
+                    else:
+                        logger.warning("Agent's final response had no content or parts.")
+                        agent_response_dict = {"error": "Agent's final response was empty."}
+                    break  # Exit loop after final response
 
-                                resume_JSON = event.actions.state_delta.get("resume_JSON", final_response_text)
-                                logger.info(
-                                    f"Emitting ParseResumeEvent with final response. {resume_JSON}"
-                                )
-                                await emit_event(
-                                    name="ParseResumeEvent",
-                                    payload={
-                                        "response": parse_dirty_json(
-                                            resume_JSON
-                                        ),
-                                        "user_id": user_id,
-                                        "session_id": active_session_id,
-                                    },
-                                )
-                            case "job_posting_agent":
-                                await emit_event(
-                                    name="ParseJobPostingEvent",
-                                    payload={
-                                        "response": parse_dirty_json(
-                                            final_response_text
-                                        ),
-                                        "user_id": user_id,
-                                        "session_id": active_session_id,
-                                    },
-                                )
-                            case "matcher_agent":
-                                await emit_event(
-                                    name="CompatibilityScoreEvent",
-                                    payload={
-                                        "response": parse_dirty_json(
-                                            final_response_text
-                                        ),
-                                        "user_id": user_id,
-                                        "session_id": active_session_id,
-                                    },
-                                )
-                            case _:
-                                logger.warning(
-                                    f"Unknown agent author: {event.author}. "
-                                    "No specific event emitted."
-                                )
-                    logger.info(
-                        f"Final response for user '{user_id}': {final_response_text}"
-                    )
-                    # break  # Stop processing events
-
-            return final_response_text
+            return agent_response_dict
 
         except Exception as e:
-            logger.error(
-                f"An error occurred while running the agent: {e}", exc_info=True
-            )
-            return f"An error occurred: {e}"
+            logger.error(f"Error in OrchestratorAgentRunner.run_async: {e}", exc_info=True)
+            return {"error": "An unexpected error occurred in the agent runner.", "details": str(e)}
+
+    async def process_and_emit_event(self, user_id: str, session_id: str, event_name: str, response: dict):
+        """
+        Process and emit an event based on the agent's response.
+
+        Args:
+            user_id: The identifier for the user.
+            session_id: The session ID.
+            event_name: The name of the event to emit.
+            response: The agent's response as a dictionary.
+        """
+        logger.info(f"Processing and emitting event '{event_name}' for user '{user_id}', session '{session_id}'.")
+
+        # Emit the event with the parsed response
+        await emit_event(
+            name=event_name,
+            payload={
+                "response": response,
+                "user_id": user_id,
+                "session_id": session_id,
+            },
+        )
+        logger.info(f"Event '{event_name}' emitted successfully.")
+
+        # Additional processing based on event type can be added here
 
 
 # Singleton instance of the runner
