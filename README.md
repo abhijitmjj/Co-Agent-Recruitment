@@ -55,6 +55,110 @@ The `OrchestratorAgentRunner` wraps the orchestrator for programmatic use and in
 
 Agents emit and consume events via Google Cloud Pub/Sub using helper tools for robust message handling. This decouples services and enables asynchronous coordination.【F:co_agent_recruitment/tools/pubsub.py†L146-L168】【F:co_agent_recruitment/tools/pubsub.py†L171-L183】
 
+## Firestore Query Tool
+
+The **Firestore Query Tool** provides agentic access to Firestore collections, enabling agents to retrieve and manipulate candidate and job data in real-time. This tool is essential for the matched agent to perform detailed compatibility analysis.
+
+### Features
+
+- **Flexible Querying**: Support for complex filters, projections, sorting, and pagination
+- **Array Operations**: Specialized support for skills matching with `array-contains` and `array-contains-any`
+- **Exponential Backoff**: Automatic retry logic for reliability
+- **Document Management**: Create, retrieve, and query documents with full type safety
+- **Match Context**: Helper functions to retrieve related candidate and job data
+
+### Environment Variables
+
+```bash
+# Firebase Configuration
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+GOOGLE_CLOUD_PROJECT=your-project-id  # or PROJECT_ID
+```
+
+### Usage Examples
+
+#### Basic Document Retrieval
+```python
+from co_agent_recruitment.tools.firestore_query import query_firestore, get_document_by_id
+
+# Get a specific candidate
+candidate = get_document_by_id("candidates", "candidate_123")
+
+# Get all active candidates
+active_candidates = query_firestore("candidates", {"status": "active"})
+```
+
+#### Skills-Based Matching
+```python
+# Find candidates with Python skills
+python_devs = query_firestore(
+    "candidates", 
+    {"skills": {"array-contains": "Python"}},
+    projection=["name", "skills", "experience"]
+)
+
+# Find candidates with multiple possible skills
+full_stack_devs = query_firestore(
+    "candidates",
+    {"skills": {"array-contains-any": ["React", "Vue", "Angular"]}},
+    limit=10
+)
+```
+
+#### Advanced Filtering
+```python
+# Find senior developers with salary requirements
+senior_devs = query_firestore(
+    "candidates",
+    {
+        "years_experience": {">=": 5},
+        "salary_expectation": {"<=": 120000},
+        "status": "available"
+    },
+    order_by="years_experience",
+    order_direction="desc"
+)
+```
+
+#### Match Context Retrieval
+```python
+from co_agent_recruitment.tools.firestore_query import retrieve_match_context
+
+# Get both candidate and job for analysis
+context = retrieve_match_context("candidate_123", "job_456")
+candidate_data = context["candidate"]
+job_data = context["job"]
+```
+
+### Local Development with Firestore Emulator
+
+For local development and testing, use the Firestore emulator:
+
+```bash
+# Install Firebase CLI
+npm install -g firebase-tools
+
+# Start Firestore emulator
+firebase emulators:start --only firestore
+
+# Set environment variable to use emulator
+export FIRESTORE_EMULATOR_HOST=localhost:8080
+```
+
+### Integration with Matched Agent
+
+The Firestore Query Tool is integrated with the **Matched Agent** to enable sophisticated candidate-job compatibility analysis:
+
+```python
+from co_agent_recruitment.agents.matched_agent import matched_agent
+
+# The matched agent uses these tools automatically:
+# - query_firestore: For finding similar candidates/jobs
+# - get_document_by_id: For retrieving specific profiles
+# - retrieve_match_context: For comprehensive match analysis
+# - create_document: For saving analysis results
+```
+
 ## Core Features
 
 Outlined in the project [blueprint](docs/blueprint.md):【F:docs/blueprint.md†L5-L9】
