@@ -86,6 +86,12 @@ env:
     availability:
       - RUNTIME
       - BUILD
+
+scripts:
+  buildCommand: bun run build
+  runCommand: bun run start
+
+
   
   # Example of a non-secret environment variable:
   # - variable: NODE_ENV
