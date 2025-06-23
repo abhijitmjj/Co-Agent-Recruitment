@@ -125,6 +125,151 @@ Select the desired configuration from the Run and Debug panel in VS Code.
 
 Contributions are welcome! Please open an issue or pull request, and refer to our [contributing guidelines](CONTRIBUTING.md).
 
+## Firestore Query Tool
+
+The Firestore Query Tool provides agentic access to candidate profiles, job descriptions, and related documents stored in Firestore. This tool enables the `matched_agent` to fetch and analyze comprehensive matching data in real-time.
+
+### Features
+
+- **Flexible Querying**: Query any Firestore collection with custom filters and projections
+- **Complex Filters**: Support for equality, comparison, array-contains, and array-contains-any operations
+- **Document Retrieval**: Get specific documents by ID with full metadata
+- **Match Context**: Higher-level helper to retrieve complete candidate-job matching context
+- **Retry Logic**: Built-in exponential backoff for robust error handling
+- **Performance Optimized**: Support for projection, ordering, and limits to minimize data transfer
+
+### Environment Variables
+
+Configure the following environment variables for Firestore access:
+
+```bash
+# Required: Google Cloud credentials
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+# OR
+FIREBASE_SERVICE_ACCOUNT_KEY='{"type":"service_account",...}'
+
+# Required: Google Cloud project ID
+PROJECT_ID=your-gcp-project-id
+# OR  
+GCP_PROJECT=your-gcp-project-id
+
+# Optional: For local development with emulator
+FIRESTORE_EMULATOR_HOST=localhost:8080
+```
+
+### Usage Examples
+
+#### Basic Collection Query
+```python
+from co_agent_recruitment.tools.firestore_query import query_firestore
+
+# Get all active candidates
+candidates = query_firestore("candidates", {"status": "active"})
+
+# Get specific candidate by ID
+candidate = query_firestore("candidates", {"__name__": "candidate_123"})
+```
+
+#### Skills-Based Matching
+```python
+# Find candidates with specific skills
+skilled_candidates = query_firestore(
+    "candidates",
+    {"skills": {"array-contains-any": ["python", "javascript"]}},
+    projection=["name", "skills", "experience_years"],
+    limit=10
+)
+```
+
+#### Job Requirements Analysis
+```python
+# Get recent high-paying jobs
+recent_jobs = query_firestore(
+    "jobs",
+    {
+        "salary_range.min": {">=": 120000},
+        "created_at": {">=": "2024-01-01"}
+    },
+    order_by="created_at",
+    order_direction="DESCENDING"
+)
+```
+
+#### Complete Match Analysis
+```python
+from co_agent_recruitment.tools.firestore_query import retrieve_match_context
+
+# Get comprehensive match context
+context = retrieve_match_context("match_789")
+if context["success"]:
+    candidate = context["candidate"]
+    job = context["job"]
+    feedback = context["interview_feedback"]
+    # Perform detailed matching analysis...
+```
+
+### ADK Agent Integration
+
+The tool is designed for use with Google's Agent Development Kit (ADK). Agents can call it using the standard tool interface:
+
+```xml
+<tool_call name="query_firestore">
+{
+  "collection": "candidates",
+  "filter_dict": {"skills": {"array-contains": "python"}},
+  "projection": ["name", "skills", "location"],
+  "limit": 5
+}
+</tool_call>
+```
+
+### Local Development with Emulator
+
+For local development and testing, use the Firestore emulator:
+
+```bash
+# Install Firebase CLI
+npm install -g firebase-tools
+
+# Start Firestore emulator
+firebase emulators:start --only=firestore
+
+# Set environment variable
+export FIRESTORE_EMULATOR_HOST=localhost:8080
+
+# Run your application or tests
+python -m pytest co_agent_recruitment/tests/test_firestore_query.py
+```
+
+### Performance Best Practices
+
+1. **Use Projections**: Limit fields to reduce data transfer
+2. **Apply Filters**: Narrow results at the database level
+3. **Set Limits**: Avoid large result sets
+4. **Index Queries**: Ensure Firestore has appropriate composite indexes
+5. **Monitor Costs**: Track query usage and optimize for efficiency
+
+### Error Handling
+
+The tool includes automatic retry logic with exponential backoff:
+- Maximum 3 retry attempts
+- Base delay of 0.5 seconds
+- Maximum delay of 10 seconds
+- Comprehensive error logging
+
+### Testing
+
+Unit tests use mocking for fast execution:
+```bash
+python -m pytest co_agent_recruitment/tests/test_firestore_query.py
+```
+
+Integration tests require the Firestore emulator:
+```bash
+export FIRESTORE_EMULATOR_HOST=localhost:8080
+python -m pytest co_agent_recruitment/tests/test_firestore_query.py -k integration
+```
+
 ## License
 
 This project is released under the [MIT License](LICENSE).

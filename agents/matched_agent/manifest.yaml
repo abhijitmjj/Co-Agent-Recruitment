@@ -1,0 +1,160 @@
+# Matched Agent Configuration
+
+name: "matched_agent"
+version: "1.0.0"
+description: "Agent for evaluating candidate-job matches with access to Firestore data"
+
+# Model configuration
+model:
+  provider: "google"
+  name: "gemini-1.5-pro"
+  temperature: 0.3
+
+# System instruction
+instruction: |
+  You are a professional recruitment matching agent with access to comprehensive candidate and job data.
+  
+  Your role is to:
+  1. Analyze candidate profiles and job requirements in detail
+  2. Evaluate compatibility across multiple dimensions (skills, experience, culture fit, salary expectations)
+  3. Provide detailed matching rationale with specific evidence
+  4. Generate actionable insights for recruiters and candidates
+  
+  You have access to Firestore data through the query_firestore tool, which allows you to:
+  - Fetch candidate profiles with detailed resume information
+  - Retrieve job descriptions with requirements and company information
+  - Access historical interview feedback and performance data
+  - Query for similar candidates or jobs for benchmarking
+  
+  Always provide specific, evidence-based assessments and actionable recommendations.
+
+# Available tools
+tools:
+  - name: "query_firestore"
+    description: "Query Firestore collections to retrieve candidate profiles, job descriptions, and related documents"
+    
+# Input/Output configuration
+input_schema:
+  type: "object"
+  properties:
+    match_id:
+      type: "string"
+      description: "ID of the candidate-job match to evaluate"
+    candidate_id:
+      type: "string" 
+      description: "ID of the candidate to analyze"
+    job_id:
+      type: "string"
+      description: "ID of the job posting to analyze"
+    analysis_type:
+      type: "string"
+      enum: ["full_match", "skills_only", "culture_fit", "salary_comparison"]
+      description: "Type of analysis to perform"
+  anyOf:
+    - required: ["match_id"]
+    - required: ["candidate_id", "job_id"]
+
+output_schema:
+  type: "object"
+  properties:
+    compatibility_score:
+      type: "integer"
+      minimum: 0
+      maximum: 100
+      description: "Overall compatibility score"
+    detailed_analysis:
+      type: "object"
+      properties:
+        skills_match:
+          type: "object"
+          properties:
+            score: 
+              type: "integer"
+              minimum: 0  
+              maximum: 100
+            matching_skills:
+              type: "array"
+              items:
+                type: "string"
+            missing_skills:
+              type: "array"
+              items:
+                type: "string"
+            skill_gap_analysis:
+              type: "string"
+        experience_match:
+          type: "object"
+          properties:
+            score: 
+              type: "integer"
+              minimum: 0
+              maximum: 100
+            years_experience:
+              type: "integer"
+            relevant_experience:
+              type: "string"
+            experience_assessment:
+              type: "string"
+        culture_fit:
+          type: "object"
+          properties:
+            score:
+              type: "integer" 
+              minimum: 0
+              maximum: 100
+            company_values_alignment:
+              type: "string"
+            work_style_compatibility:
+              type: "string"
+        salary_compatibility:
+          type: "object"
+          properties:
+            score:
+              type: "integer"
+              minimum: 0
+              maximum: 100
+            candidate_expectation:
+              type: "string"
+            job_offering:
+              type: "string"
+            negotiation_potential:
+              type: "string"
+    recommendations:
+      type: "object"
+      properties:
+        for_recruiter:
+          type: "array"
+          items:
+            type: "string"
+        for_candidate:
+          type: "array" 
+          items:
+            type: "string"
+        next_steps:
+          type: "array"
+          items:
+            type: "string"
+    match_rationale:
+      type: "string"
+      description: "Detailed explanation of the matching decision"
+
+# Callbacks and lifecycle
+callbacks:
+  before_agent:
+    - log_match_analysis_start
+  after_agent:
+    - log_match_analysis_complete
+    - store_analysis_results
+
+# Performance and reliability
+retry:
+  max_attempts: 3
+  backoff_factor: 2.0
+
+timeout: 300  # 5 minutes
+
+# Environment variables required
+required_env_vars:
+  - "GOOGLE_APPLICATION_CREDENTIALS"
+  - "PROJECT_ID" 
+  - "FIRESTORE_EMULATOR_HOST"  # Optional for local development
