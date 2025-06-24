@@ -32,6 +32,7 @@ import { useSession } from 'next-auth/react'; // Ensured import
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { v4 as uuidv4 } from 'uuid'; // Import uuid
 
 export default function CompanyPage() {
   const { toast } = useToast();
@@ -78,7 +79,7 @@ export default function CompanyPage() {
   };
 
   const onSubmit: SubmitHandler<JobDescriptionInput> = async (data) => {
-    const newJobId = `job_${Date.now()}`;
+    const newJobId = uuidv4(); // Generate UUID for the new job ID
     const user_id = session?.user?.email || 'anonymous_company_user';
     const session_id = session?.user?.id || Date.now().toString();
 
@@ -91,8 +92,7 @@ export default function CompanyPage() {
     const orchestratorResult = await processJobWithOrchestratorAction({
       jobText: jobTextForOrchestrator,
       user_id,
-      session_id,
-      jobId: newJobId,
+      session_id
     });
 
     setIsProcessingOrchestrator(false); // Clear loading state for orchestrator
@@ -111,7 +111,7 @@ export default function CompanyPage() {
     // Create the newJob object with orchestrator data
     const newJob: Job = { 
       ...data, 
-      id: newJobId, 
+      id: newJobId, // Use the generated UUID
       companyName: session?.user?.name || "Your Company", // Use session name or default
       user_id, // Included from Job type update
       session_id, // Included from Job type update
@@ -125,7 +125,7 @@ export default function CompanyPage() {
     try {
       await publishEventAction("job_description_submitted", newJob);
       const queryText = data.responsibilities || jobTextForOrchestrator; // Use responsibilities or full text for query
-      await publishQueryAction(queryText, newJobId, session_id);
+      await publishQueryAction(queryText, newJobId, session_id); // Use the same newJobId (UUID)
       toast({ title: 'Job Submitted & Published', description: 'Your job description has been successfully submitted and published to event stream.' });
     } catch (error) {
       console.error("Failed to publish job events:", error);

@@ -44,7 +44,7 @@ class OrchestratorAgentRunner:
 
     async def run_async(
         self, user_id: str, query: str, session_id: Optional[str] = None
-    ) -> dict:  # Changed return type from str to dict
+    ) -> str:  # Changed return type from str to dict
         """
         Runs a query against the orchestrator agent for a given user.
 
@@ -89,7 +89,7 @@ class OrchestratorAgentRunner:
                             event.content.parts[0].text
                             or "Agent returned empty content."
                         )
-                        logger.info(f"Orchestrator agent final_response_text: {final_response_text}")
+                        '''logger.info(f"Orchestrator agent final_response_text: {final_response_text}")
                         try:
                             # The agent's output is expected to be a JSON string
                             parsed_json_response = parse_dirty_json(final_response_text)
@@ -112,7 +112,60 @@ class OrchestratorAgentRunner:
         except Exception as e:
             logger.error(f"Error in OrchestratorAgentRunner.run_async: {e}", exc_info=True)
             return {"error": "An unexpected error occurred in the agent runner.", "details": str(e)}
-
+        '''
+                        match event.author:
+                            case "resume_parser_agent":
+                                resume_JSON = event.actions.state_delta.get("resume_JSON", final_response_text)
+                                logger.info(
+                                    f"Emitting ParseResumeEvent with final response. {resume_JSON}"
+                                )
+                                await emit_event(
+                                    name="ParseResumeEvent",
+                                    payload={
+                                        "response": parse_dirty_json(
+                                            resume_JSON
+                                        ),
+                                        "user_id": user_id,
+                                        "session_id": active_session_id,
+                                    },
+                                )
+                            case "job_posting_agent":
+                                await emit_event(
+                                    name="ParseJobPostingEvent",
+                                    payload={
+                                        "response": parse_dirty_json(
+                                            final_response_text
+                                        ),
+                                        "user_id": user_id,
+                                        "session_id": active_session_id,
+                                    },
+                                )
+                            case "matcher_agent":
+                                await emit_event(
+                                    name="CompatibilityScoreEvent",
+                                    payload={
+                                        "response": parse_dirty_json(
+                                            final_response_text
+                                        ),
+                                        "user_id": user_id,
+                                        "session_id": active_session_id,
+                                    },
+                                )
+                            case _:
+                                logger.warning(
+                                    f"Unknown agent author: {event.author}. "
+                                    "No specific event emitted."
+                                )
+                    logger.info(
+                        f"Final response for user '{user_id}': {final_response_text}"
+                    )
+            return final_response_text
+        except Exception as e:
+            logger.error(
+                f"An error occurred while running the agent: {e}", exc_info=True
+            )
+            return f"An error occurred: {e}"
+        
     async def process_and_emit_event(self, user_id: str, session_id: str, event_name: str, response: dict):
         """
         Process and emit an event based on the agent's response.

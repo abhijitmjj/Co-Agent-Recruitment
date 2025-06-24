@@ -38,9 +38,8 @@ export async function processJobWithOrchestratorAction(params: {
   jobText: string;
   user_id: string;
   session_id: string;
-  jobId: string;
 }): Promise<{ success: boolean; data?: any; error?: string }> {
-  const { jobText, user_id, session_id, jobId } = params;
+  const { jobText, user_id, session_id } = params;
   try {
     // Assuming the Python ADK orchestrator is running on localhost:8000
     // and can receive job text via the /orchestrator endpoint
@@ -50,11 +49,9 @@ export async function processJobWithOrchestratorAction(params: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        query: jobText, // Sending jobText as the 'query'
+        query: jobText, 
         user_id: user_id,
-        session_id: session_id,
-        job_id: jobId, // Sending jobId for context
-        input_type: 'job_posting' // Explicitly stating the input type
+        session_id: session_id
       }),
     });
 
