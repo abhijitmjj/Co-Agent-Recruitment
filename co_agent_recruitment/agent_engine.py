@@ -14,9 +14,8 @@ from co_agent_recruitment.agent import (
     get_shared_session_service,
     root_agent,
 )
-from co_agent_recruitment.tools.pubsub import emit_event
-from co_agent_recruitment.tools.pubsub import parse_dirty_json
-
+from co_agent_recruitment.events import ParseResumeEvent, ParseJobPostingEvent, CompatibilityScoreEvent
+from co_agent_recruitment.tools.pubsub import emit_event, parse_dirty_json
 # Configure logging with a clear format
 logging.basicConfig(
     level=logging.INFO,  # Set to DEBUG to see detailed event logs
@@ -101,18 +100,30 @@ class OrchestratorAgentRunner:
                                         "resume_JSON", final_response_text
                                     ),
                                 )
+                                
+                                # Parse the JSON and extract the nested resume data if needed
+                                parsed_response = parse_dirty_json(resume_JSON)
+                                resume_data = parsed_response
+                                
+                                # Handle nested response structure (similar to job posting)
+                                if isinstance(parsed_response, dict):
+                                    # Check for common nested patterns
+                                    if "parse_resume_response" in parsed_response:
+                                        resume_data = parsed_response["parse_resume_response"].get("resume_data", parsed_response)
+                                    elif "resume_data" in parsed_response:
+                                        resume_data = parsed_response["resume_data"]
+                                logger.info(f"Extracted resume data: {resume_data}")
+                                event_payload = ParseResumeEvent(
+                                    resume_data=resume_data,
+                                    user_id=user_id,
+                                    session_id=active_session_id,
+                                )
                                 logger.info(
-                                    f"Emitting ParseResumeEvent with final response. {resume_JSON}"
+                                    f"Emitting ParseResumeEvent with final response. {event_payload.model_dump()}"
                                 )
                                 await emit_event(
                                     name="ParseResumeEvent",
-                                    payload={
-                                        "response": parse_dirty_json(
-                                            resume_JSON
-                                        ),
-                                        "user_id": user_id,
-                                        "session_id": active_session_id,
-                                    },
+                                    payload=event_payload.model_dump(),
                                 )
                             case "job_posting_agent":
                                 job_posting_JSON: str = cast(
@@ -122,28 +133,55 @@ class OrchestratorAgentRunner:
                                     ),
                                 )
                                 logger.info(
-                                    f"Emitting JobPostingAnalysisEvent with final response. {job_posting_JSON}"
+                                    f"Job posting JSON extracted: \n{job_posting_JSON}\n..."
+                                )
+                                
+                                # Parse the JSON and extract the nested job_posting_data
+                                parsed_response = parse_dirty_json(job_posting_JSON)
+                                logger.info(
+                                    f"Cleaned job posting JSON: \n{parsed_response}\n..."
+                                )
+                                
+                                # Extract the actual job posting data from the nested response
+                                job_posting_data = parsed_response
+                                if isinstance(parsed_response, dict) and "analyze_job_posting_response" in parsed_response:
+                                    job_posting_data = parsed_response["analyze_job_posting_response"].get("job_posting_data", parsed_response)
+                                
+                                logger.info(f"Extracted job posting data: {job_posting_data}")
+                                
+                                event_payload = ParseJobPostingEvent(
+                                    job_posting_data=job_posting_data.get("job_posting_data", job_posting_data),
+                                    user_id=user_id,
+                                    session_id=active_session_id,
+                                )
+                                logger.info(
+                                    f"Emitting JobPostingAnalysisEvent with final response. {event_payload}"
                                 )
                                 await emit_event(
                                     name="ParseJobPostingEvent",
-                                    payload={
-                                        "response": parse_dirty_json(
-                                            job_posting_JSON
-                                        ),
-                                        "user_id": user_id,
-                                        "session_id": active_session_id,
-                                    },
+                                    payload=event_payload.model_dump(),
                                 )
                             case "matcher_agent":
+                                # Parse the JSON and extract nested compatibility data if needed
+                                parsed_response = parse_dirty_json(final_response_text)
+                                compatibility_data = parsed_response
+                                
+                                # Handle nested response structure
+                                if isinstance(parsed_response, dict):
+                                    # Check for common nested patterns
+                                    if "analyze_compatibility_response" in parsed_response:
+                                        compatibility_data = parsed_response["analyze_compatibility_response"].get("compatibility_data", parsed_response)
+                                    elif "compatibility_data" in parsed_response:
+                                        compatibility_data = parsed_response["compatibility_data"]
+                                
+                                event_payload = CompatibilityScoreEvent(
+                                    compatibility_data=compatibility_data,
+                                    user_id=user_id,
+                                    session_id=active_session_id,
+                                )
                                 await emit_event(
                                     name="CompatibilityScoreEvent",
-                                    payload={
-                                        "response": parse_dirty_json(
-                                            final_response_text
-                                        ),
-                                        "user_id": user_id,
-                                        "session_id": active_session_id,
-                                    },
+                                    payload=event_payload.model_dump(),
                                 )
                             case _:
                                 logger.warning(

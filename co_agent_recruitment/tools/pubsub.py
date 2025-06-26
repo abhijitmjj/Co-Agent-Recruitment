@@ -47,8 +47,8 @@ dotenv.load_dotenv()
 # Configuration
 # --------------------------------------------------------------------------- #
 PROJECT_ID: str = os.getenv("PROJECT_ID", "YOUR_PROJECT_ID")
-TOPIC_ID: str = os.getenv("TOPIC_ID", "YOUR_TOPIC_ID")
-SUB_ID: str = os.getenv("SUB_ID", "YOUR_SUBSCRIPTION_ID")
+TOPIC_ID: str = os.getenv("TOPIC_ID", "co-agent-recruitment-events")
+SUB_ID: str = os.getenv("SUB_ID", "co-agent-recruitment-events-sub")
 
 _publisher = pubsub_v1.PublisherClient()
 _topic_path = _publisher.topic_path(PROJECT_ID, TOPIC_ID)
@@ -153,6 +153,19 @@ async def emit_event(name: str, payload: Dict) -> str:
 
     Returns:
         The message id assigned by Pub/Sub.
+    
+    Example payload:{
+        "subscription": "projects/my-project/subscriptions/my-subscription",
+        "message": {
+            "@type": "type.googleapis.com/google.pubsub.v1.PubsubMessage",
+            "attributes": {
+            "attr1":"attr1-value"
+            },
+            "data": "dGVzdCBtZXNzYWdlIDM=",
+            "messageId": "message-id",
+            "publishTime":"2021-02-05T04:06:14.109Z"
+        }
+    }
     """
     logger.debug("Emit event %s – payload=%s", name, payload)
     data = json.dumps(payload).encode()  # Pub/Sub requires bytes

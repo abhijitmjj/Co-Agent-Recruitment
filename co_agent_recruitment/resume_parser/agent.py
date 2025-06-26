@@ -340,76 +340,92 @@ async def parse_resume(resume_text: str):
         )  # Log output
         return final_output
     except Exception as e:
-        # Log error but don't expose internal details
+        # Log error with more details for debugging
         logger.error(
             f"Resume parsing failed: {type(e).__name__} - {e}", exc_info=True
-        )  # Log exception
-        print(f"Resume parsing failed: {type(e).__name__}")
-
-        # Return error with session info
-        error_session_info = {
-            "operation_type": "resume_parsing",
-            "timestamp": datetime.datetime.now().isoformat(),
-            "processing_time": "failed",
-            "error": f"Failed to parse resume: {type(e).__name__}",
-        }
-
-        return {
-            "resume_data": None,
-            "session_info": error_session_info,
+        )
+        
+        # Create a fallback response instead of raising an exception
+        fallback_output = {
+            "resume_data": {
+                "personal_details": {
+                    "full_name": "Resume parsing failed",
+                    "email": None,
+                    "phone_number": None,
+                    "location": None,
+                    "links": None
+                },
+                "professional_summary": f"Failed to parse resume: {type(e).__name__}. Please try again or contact support.",
+                "inferred_experience_level": None,
+                "total_years_experience": None,
+                "work_experience": None,
+                "education": None,
+                "skills": None,
+                "certifications": None,
+                "projects": None,
+                "languages": None,
+                "awards": None,
+                "volunteers": None
+            },
+            "session_info": {
+                "operation_type": "resume_parsing",
+                "timestamp": datetime.datetime.now().isoformat(),
+                "processing_time": "failed",
+                "model_used": get_model_name(),
+                "error": f"{type(e).__name__}: {str(e)}"
+            },
             "operation_status": "error",
+            "error_message": f"Resume parsing failed: {type(e).__name__}. Please try uploading a different format or contact support."
         }
+        
+        logger.info(f"Returning fallback response due to parsing failure")
+        return fallback_output
 
 
 # Session management callback functions
 async def before_agent_callback(callback_context) -> None:
-    """Callback executed before agent runs - handles session state initialization."""
+    """Callback executed before agent runs - uses orchestrator's session state."""
     from google.adk.agents.callback_context import CallbackContext
 
     if not isinstance(callback_context, CallbackContext):
         return
 
-    # Check if this is a new conversation or continuing one
-    if "conversation_started" not in callback_context.state:
-        callback_context.state["conversation_started"] = (
-            datetime.datetime.now().isoformat()
-        )
-        callback_context.state["operation_count"] = 0
-        logger.info(
-            f"New conversation started for user: {callback_context._invocation_context.session.user_id}"
-        )
+    session_id = callback_context._invocation_context.session.id
+    user_id = callback_context._invocation_context.session.user_id
 
-    # Increment operation count for this session
-    callback_context.state["operation_count"] = (
-        callback_context.state.get("operation_count", 0) + 1
-    )
+    # Use the orchestrator's interaction_count instead of separate operation_count
+    interaction_count = callback_context.state.get("interaction_count", 1)
+    
+    # Update operation-specific state
     callback_context.state["last_operation_start"] = datetime.datetime.now().isoformat()
     callback_context.state["operation_type"] = "resume_parsing"
-    callback_context.state["session_id"] = (
-        callback_context._invocation_context.session.id
-    )
+    callback_context.state["session_id"] = session_id
 
     logger.info(
-        f"Operation #{callback_context.state['operation_count']} started for user: {callback_context._invocation_context.session.user_id} on session {callback_context.state['session_id']}"
+        f"Resume parsing operation #{interaction_count} started for user: {user_id} on session {session_id}"
     )
 
 
 async def after_agent_callback(callback_context) -> None:
-    """Callback executed after agent runs - handles session state cleanup and logging."""
+    """Callback executed after agent runs - uses orchestrator's session state."""
     from google.adk.agents.callback_context import CallbackContext
 
     if not isinstance(callback_context, CallbackContext):
         return
 
+    session_id = callback_context._invocation_context.session.id
+    user_id = callback_context._invocation_context.session.user_id
+
     # Update session state with completion info
     callback_context.state["last_operation_end"] = datetime.datetime.now().isoformat()
     callback_context.state["last_operation_completed"] = True
-    callback_context.state["session_id"] = (
-        callback_context._invocation_context.session.id
-    )
+    callback_context.state["session_id"] = session_id
+
+    # Use the orchestrator's interaction_count for consistent numbering
+    interaction_count = callback_context.state.get("interaction_count", 1)
 
     logger.info(
-        f"Operation #{callback_context.state.get('operation_count', 0)} completed for user: {callback_context._invocation_context.session.user_id} on session {callback_context.state['session_id']}"
+        f"Resume parsing operation #{interaction_count} completed for user: {user_id} on session {session_id}"
     )
 
 
@@ -424,10 +440,24 @@ def create_resume_parser_agent() -> Agent:
         instruction=(
             "You are an expert AI resume parser. Your task is to transform the unstructured resume text provided below "
             "into a single, structured, and comprehensive JSON object suitable for a modern Applicant Tracking System (ATS). "
-            "Only extract information explicitly present in the text. For the awards section, ensure each award entry is a "
-            "separate object in the awards array with its own title, awarder, date, and summary; do not merge multiple "
-            "awards into one object or duplicate keys. For other list fields (certifications, education, work_experience, "
-            "projects, languages), apply the same rule: each list item is separate. Output valid JSON with no duplicate keys."
+            
+            "IMPORTANT REQUIREMENTS:\n"
+            "1. ALWAYS call the parse_resume tool with the provided resume text\n"
+            "2. ALWAYS return the complete structured JSON response from parse_resume\n"
+            "3. NEVER return just a brief description of what you are\n"
+            "4. Extract ALL information explicitly present in the text\n\n"
+            
+            "PARSING RULES:\n"
+            "- For the awards section, ensure each award entry is a separate object in the awards array\n"
+            "- Do not merge multiple awards into one object or duplicate keys\n"
+            "- For other list fields (certifications, education, work_experience, projects, languages), each list item is separate\n"
+            "- Output valid JSON with no duplicate keys\n"
+            "- Include session information in the response\n\n"
+            
+            "WORKFLOW:\n"
+            "1. When user provides resume text, immediately call parse_resume tool\n"
+            "2. Return the complete structured JSON output from the tool\n"
+            "3. Do not provide explanatory text unless there's an error\n"
         ),
         tools=[parse_resume],
         output_key="resume_JSON",

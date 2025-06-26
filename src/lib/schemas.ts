@@ -35,6 +35,8 @@ const createSecureStringSchema = (minLength: number, maxLength: number, fieldNam
 
 export const JobDescriptionSchema = z.object({
   jobTitle: createSecureStringSchema(3, 100, "Job title"),
+  company: createSecureStringSchema(3, 100, "Company name"),
+  location: createSecureStringSchema(2, 100, "Location"),
   responsibilities: createSecureStringSchema(50, 10000, "Responsibilities"),
   requiredSkills: createSecureStringSchema(10, 1000, "Required skills")
     .describe("Comma-separated list of skills"),

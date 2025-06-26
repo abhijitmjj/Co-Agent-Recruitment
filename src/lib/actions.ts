@@ -39,7 +39,6 @@ export async function generateSEOKeywordsAction(input: GenerateSEOKeywordsInput)
 // Placeholder types for shared state, ideally these would be more complex and stored in a DB
 export interface Job extends JobDescriptionInput {
   id: string;
-  companyName?: string; // Example additional field
 }
 
 export interface Candidate extends CandidateProfileInput {
