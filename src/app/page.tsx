@@ -46,6 +46,15 @@ export default function Home() {
                   </Button>
                 )}
               </div>
+              {session && (
+                <div className="mt-4">
+                  <Button asChild size="sm" variant="secondary" className="group">
+                    <Link href="/data">
+                      View Data Dashboard <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </div>
             <Image
               src="https://c.pxhere.com/images/fc/a3/17c12545f815bd2410b401e41ce3-1445419.jpg!d"
