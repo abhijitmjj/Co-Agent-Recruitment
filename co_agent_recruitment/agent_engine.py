@@ -101,9 +101,7 @@ class OrchestratorAgentRunner:
                                 # value from state_delta may be Any; cast to str for typing
                                 resume_JSON: str = cast(
                                     str,
-                                    event.actions.state_delta.get(
-                                        "resume_JSON", final_response_text
-                                    ),
+                                    event.actions.state_delta.get("resume_JSON", ""),
                                 )
 
                                 # Parse the JSON and extract the nested resume data if needed
@@ -136,7 +134,7 @@ class OrchestratorAgentRunner:
                                 job_posting_JSON: str = cast(
                                     str,
                                     event.actions.state_delta.get(
-                                        "job_posting_JSON", final_response_text
+                                        "job_posting_JSON",
                                     ),
                                 )
                                 logger.info(

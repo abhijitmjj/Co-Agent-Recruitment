@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label'; // Keep if used, but FormLabel is
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { getSuggestedJobTitlesAction, generateSEOKeywordsAction, performMatchmakingAction, type Candidate, type Job, publishQueryAction } from '@/lib/actions';
+import { getSuggestedJobTitlesAction, generateSEOKeywordsAction, performMatchmakingAction, type Candidate, type Job, type MatchResult, publishQueryAction } from '@/lib/actions';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Briefcase, Lightbulb, Search, Sparkles, UserCheck, Loader2, Eye } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
@@ -24,7 +24,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CondenseJobDataInput, condenseJobData }  from '@/ai/flows/condense-job-data'
 import { useSession } from 'next-auth/react';
-import { da } from 'date-fns/locale';
+// Removed unused import: da from 'date-fns/locale'
 import {v4 as uuidv4} from 'uuid';
 
 export default function CompanyPage() {
@@ -36,7 +36,7 @@ export default function CompanyPage() {
   const [submittedJob, setSubmittedJob] = useState<Job | null>(null);
   const [seoKeywords, setSeoKeywords] = useState<string[]>([]);
   const [isLoadingSeo, setIsLoadingSeo] = useState(false);
-  const [potentialMatches, setPotentialMatches] = useState<Awaited<ReturnType<typeof performMatchmakingAction>>>([]);
+  const [potentialMatches, setPotentialMatches] = useState<MatchResult[]>([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
   const [selectedCandidateDetail, setSelectedCandidateDetail] = useState<Candidate | null>(null);
   const [isCandidateDetailModalOpen, setIsCandidateDetailModalOpen] = useState(false);
@@ -92,7 +92,7 @@ export default function CompanyPage() {
   const onSubmit: SubmitHandler<JobDescriptionInput> = async (data) => {
     const newJobId = `job_${data.company}_${Date.now()}`;
     const user_id = session?.user?.id || `cand_${Date.now()}`;
-    const user_email = session?.user?.email || ''; // Get email from session
+    // const user_email = session?.user?.email || ''; // Get email from session - unused
     // const session_id = uuidv4(); // Generate a unique session ID
     const newJob: Job = { ...data, id: newJobId, company: data.company }; // Use the submitted company name
     addJob(newJob);
@@ -132,14 +132,14 @@ export default function CompanyPage() {
       } else if (typeof enriched === 'string') {
         enrichedJobString = enriched;
       }
-    } catch (err) {
+    } catch {
       enrichedJobString = 'GenAI enrichment failed.';
     }
     await publishQueryAction(enrichedJobString, user_id, sessionId);
     // Perform matchmaking for the new job
     setIsLoadingMatches(true);
-    const matches = await performMatchmakingAction(newJob, candidates);
-    setPotentialMatches(matches);
+    const matchesResult = await performMatchmakingAction(newJob, candidates);
+    setPotentialMatches(matchesResult.success ? matchesResult.data || [] : []);
     setIsLoadingMatches(false);
     
     // Scroll to results section
@@ -164,18 +164,18 @@ export default function CompanyPage() {
     }
   };
 
-  const handleNewSession = () => {
-    // Clear the stored session and create a new one
-    const userId = session?.user?.id;
-    if (userId) {
-      localStorage.removeItem(`company_session_${userId}`);
-      const newSessionId = `company_session_${userId}_${Date.now()}`;
-      localStorage.setItem(`company_session_${userId}`, newSessionId);
-    }
-    handleSubmitAnother();
-  };
+  // const handleNewSession = () => {
+  //   // Clear the stored session and create a new one
+  //   const userId = session?.user?.id;
+  //   if (userId) {
+  //     localStorage.removeItem(`company_session_${userId}`);
+  //     const newSessionId = `company_session_${userId}_${Date.now()}`;
+  //     localStorage.setItem(`company_session_${userId}`, newSessionId);
+  //   }
+  //   handleSubmitAnother();
+  // };
 
-  const currentJobs = useMemo(() => jobs.filter(job => job.company === form.getValues('company')), [jobs]);
+  const currentJobs = useMemo(() => jobs.filter(job => job.company === form.getValues('company')), [jobs, form]);
 
   const handleViewCandidateProfile = (candidateId: string) => {
     const candidate = getCandidateById(candidateId);
@@ -304,7 +304,7 @@ export default function CompanyPage() {
               <UserCheck className="mr-3 h-7 w-7 text-green-600 dark:text-green-400" /> Job Posted Successfully!
             </h2>
             <p className="text-green-700 dark:text-green-300">
-              Your job posting has been processed and we've found potential candidate matches for you.
+              Your job posting has been processed and we&apos;ve found potential candidate matches for you.
             </p>
           </div>
           <Card className="shadow-lg bg-card/80 border-primary/30">
@@ -396,8 +396,8 @@ export default function CompanyPage() {
                             setIsLoadingSeo(false);
 
                             setIsLoadingMatches(true);
-                            const jobMatches = await performMatchmakingAction(job, candidates);
-                            setPotentialMatches(jobMatches);
+                            const jobMatchesResult = await performMatchmakingAction(job, candidates);
+                            setPotentialMatches(jobMatchesResult.success ? jobMatchesResult.data || [] : []);
                             setIsLoadingMatches(false);
                         }
                         fetchDataForJob();

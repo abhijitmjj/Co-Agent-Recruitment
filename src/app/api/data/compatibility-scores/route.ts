@@ -6,7 +6,10 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 const db = getFirestore(adminApp);
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  request: NextRequest
+) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -14,10 +17,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || session.user.id;
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    // Extract search params for potential future use
+    // const { searchParams } = new URL(request.url);
+    // const userId = searchParams.get('userId') || session.user.id;
+    // const limit = parseInt(searchParams.get('limit') || '10');
+    // const offset = parseInt(searchParams.get('offset') || '0');
 
     // Query compatibility_scores collection - simplified approach
     const collection = db.collection('compatibility_scores');

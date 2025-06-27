@@ -2,6 +2,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import SimpleDataDashboard from '@/components/simple-data-dashboard';
+import Link from 'next/link';
 
 export default async function DataPage() {
   const session = await getServerSession(authOptions);
@@ -11,7 +12,7 @@ export default async function DataPage() {
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-4xl font-bold mb-4">Authentication Required</h1>
         <p className="text-lg mb-4">You must be logged in to view this page.</p>
-        <a href="/api/auth/signin" className="text-accent hover:underline">Sign In</a>
+        <Link href="/api/auth/signin" className="text-accent hover:underline">Sign In</Link>
       </div>
     );
   }

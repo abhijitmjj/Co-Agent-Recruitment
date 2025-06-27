@@ -31,6 +31,11 @@ dependencies = [
     "pandas>=2.3.0",
     "scikit-learn>=1.7.0",
     "vertexai>=1.43.0",
+    "cleantext>=1.1.4",
+    "ftfy>=6.3.1",
+    "regex>=2024.11.6",
+    "lxml>=6.0.0",
+    "nltk>=3.9.1",
 ]
 
 [build-system]

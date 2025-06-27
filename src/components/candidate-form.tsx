@@ -30,7 +30,10 @@ import {
   summarizeCandidateProfileAction,
   performMatchmakingAction,
   type Candidate,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type Job,
+  type MatchResult,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   publishEventAction,
   publishQueryAction
 } from '@/lib/actions';
@@ -66,9 +69,7 @@ export default function CandidateForm() {
   const [submittedProfile, setSubmittedProfile] = useState<Candidate | null>(
     null
   );
-  const [potentialMatches, setPotentialMatches] = useState<
-    Awaited<ReturnType<typeof performMatchmakingAction>>
-  >([]);
+  const [potentialMatches, setPotentialMatches] = useState<MatchResult[]>([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -97,6 +98,7 @@ export default function CandidateForm() {
 
     const user_id = session?.user?.id || `cand_${Date.now()}`;
     const user_email = session?.user?.email || ''; // Get email from session
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     // const session_id = uuidv4(); // Generate a unique session ID
     const newCandidate: Candidate = { ...data, id: user_id, aiSummary: finalSummary, user_email };
     addCandidate(newCandidate);
@@ -104,8 +106,8 @@ export default function CandidateForm() {
     toast({ title: 'Profile Submitted', description: 'Your profile has been successfully submitted.' });
 
     setIsLoadingMatches(true);
-    const matches = await performMatchmakingAction(newCandidate, jobs);
-    setPotentialMatches(matches);
+    const matchesResult = await performMatchmakingAction(newCandidate, jobs);
+    setPotentialMatches(matchesResult.success ? matchesResult.data || [] : []);
     setIsLoadingMatches(false);
     setIsSubmitted(true);
     
@@ -129,6 +131,7 @@ export default function CandidateForm() {
     form.reset();
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleNewSession = () => {
     // Clear the stored session and create a new one
     const userId = session?.user?.id;
@@ -282,7 +285,7 @@ export default function CandidateForm() {
 }
 interface SubmissionResultProps {
   profile: Candidate | null;
-  matches: Awaited<ReturnType<typeof performMatchmakingAction>>;
+  matches: MatchResult[];
   isLoading: boolean;
   onBack: () => void;
   sessionId: string;
@@ -306,7 +309,7 @@ function SubmissionResult({
           <Briefcase className="mr-3 h-7 w-7 text-green-600 dark:text-green-400" /> Profile Submitted Successfully!
         </h2>
         <p className="text-green-700 dark:text-green-300">
-          Your profile has been processed and we've found potential job matches for you.
+          Your profile has been processed and we&apos;ve found potential job matches for you.
         </p>
       </div>
       <Card className="shadow-lg bg-card/80 border-primary/30">

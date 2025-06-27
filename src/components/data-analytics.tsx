@@ -63,14 +63,14 @@ export default function DataAnalytics() {
       const compatibilityScores = scoresData.compatibilityScores || [];
 
       // Calculate average compatibility score
-      const avgScore = compatibilityScores.length > 0 
-        ? compatibilityScores.reduce((sum: number, score: any) => 
+      const avgScore = compatibilityScores.length > 0
+        ? compatibilityScores.reduce((sum: number, score: Record<string, any>) =>
             sum + (score.compatibility_data?.compatibility_score || 0), 0) / compatibilityScores.length
         : 0;
 
       // Extract top skills from resumes
       const skillsMap = new Map<string, number>();
-      resumes.forEach((resume: any) => {
+      resumes.forEach((resume: Record<string, any>) => {
         const skills = resume.resume_data?.skills?.technical;
         if (skills) {
           [
@@ -92,7 +92,7 @@ export default function DataAnalytics() {
 
       // Extract experience levels
       const experienceLevelsMap = new Map<string, number>();
-      resumes.forEach((resume: any) => {
+      resumes.forEach((resume: Record<string, any>) => {
         const level = resume.resume_data?.inferred_experience_level;
         if (level) {
           experienceLevelsMap.set(level, (experienceLevelsMap.get(level) || 0) + 1);
@@ -104,7 +104,7 @@ export default function DataAnalytics() {
 
       // Extract industries from job postings
       const industriesMap = new Map<string, number>();
-      jobPostings.forEach((posting: any) => {
+      jobPostings.forEach((posting: Record<string, any>) => {
         const industry = posting.job_posting_data?.industry_type;
         if (industry) {
           industriesMap.set(industry, (industriesMap.get(industry) || 0) + 1);
@@ -118,17 +118,17 @@ export default function DataAnalytics() {
 
       // Recent activity
       const recentActivity = [
-        ...resumes.map((r: any) => ({
+        ...resumes.map((r: Record<string, any>) => ({
           type: 'resume',
           timestamp: r.created_at,
           description: `Resume parsed for ${r.resume_data?.personal_details?.full_name || 'Unknown'}`
         })),
-        ...jobPostings.map((j: any) => ({
+        ...jobPostings.map((j: Record<string, any>) => ({
           type: 'job_posting',
           timestamp: j.created_at,
           description: `Job posting analyzed: ${j.job_posting_data?.job_title || 'Unknown'}`
         })),
-        ...compatibilityScores.map((c: any) => ({
+        ...compatibilityScores.map((c: Record<string, any>) => ({
           type: 'compatibility',
           timestamp: c.created_at,
           description: `Compatibility score generated: ${c.compatibility_data?.compatibility_score || 0}%`

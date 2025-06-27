@@ -2,6 +2,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth'; // Adjust path to the new auth.ts file
 import SimpleDataDashboard from '@/components/simple-data-dashboard';
+import Link from 'next/link';
 
 export default async function CandidateProfilePage() {
   const session = await getServerSession(authOptions);
@@ -11,7 +12,7 @@ export default async function CandidateProfilePage() {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <p className="text-lg mb-4">You must be logged in to view this page.</p>
-        <a href="/api/auth/signin" className="text-accent hover:underline">Sign In</a>
+        <Link href="/api/auth/signin" className="text-accent hover:underline">Sign In</Link>
       </div>
     );
   }
@@ -21,7 +22,7 @@ export default async function CandidateProfilePage() {
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-4xl font-bold mb-4">Access Denied</h1>
         <p className="text-lg mb-8">This page is for candidates only.</p>
-        <a href="/" className="text-accent hover:underline">Go to Homepage</a>
+        <Link href="/" className="text-accent hover:underline">Go to Homepage</Link>
       </div>
     );
   }

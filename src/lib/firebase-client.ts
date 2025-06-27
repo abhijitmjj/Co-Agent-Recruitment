@@ -23,7 +23,7 @@ console.debug('[firebase-client] firebaseConfig:', {
 });
 
 // Prevent double-initialisation in dev/HMR
-let firebaseApp: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const firebaseApp: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;

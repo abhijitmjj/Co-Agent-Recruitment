@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function extractMatchingSkills(resume: any, jobPosting: any): string[] {
+function extractMatchingSkills(resume: Record<string, any>, jobPosting: Record<string, any>): string[] {
   const resumeSkills = [
     ...(resume.skills?.technical?.programming_languages || []),
     ...(resume.skills?.technical?.frameworks_libraries || []),
@@ -140,7 +140,7 @@ function extractMatchingSkills(resume: any, jobPosting: any): string[] {
   ).slice(0, 8);
 }
 
-function extractMissingSkills(resume: any, jobPosting: any): string[] {
+function extractMissingSkills(resume: Record<string, any>, jobPosting: Record<string, any>): string[] {
   const resumeSkills = [
     ...(resume.skills?.technical?.programming_languages || []),
     ...(resume.skills?.technical?.frameworks_libraries || []),

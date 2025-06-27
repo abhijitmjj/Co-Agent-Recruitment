@@ -19,7 +19,7 @@ from .json_agents import (
 from .matcher.json_matcher import generate_compatibility_score_json
 from .tools.pubsub import emit_event
 from .agent_engine import get_agent_runner
-
+from co_agent_recruitment.utils import clean_text_to_ascii
 
 class ResumeRequest(BaseModel):
     """Request model for resume parsing."""
@@ -346,7 +346,7 @@ async def orchestrator_endpoint(request: OrchestratorRequest):
         runner = get_agent_runner()
         response = await runner.run_async(
             user_id=request.user_id,
-            query=request.query,
+            query=clean_text_to_ascii(request.query or "") or "",
             session_id=request.session_id,
         )
         return {"success": True, "response": response}

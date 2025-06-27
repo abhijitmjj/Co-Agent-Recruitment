@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Separator } from '@/components/ui/separator';
 import DataAnalytics from '@/components/data-analytics';
 import {
@@ -20,7 +21,9 @@ import {
   Phone,
   ExternalLink,
   Building,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   GraduationCap,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Award,
   Code,
   RefreshCw
@@ -28,8 +31,8 @@ import {
 
 interface Resume {
   id: string;
-  response?: any; // For nested response structure
-  resume_data?: {
+  response?: Record<string, any>; // For nested response structure
+  resume_data?: Record<string, any> | {
     personal_details: {
       full_name: string;
       email?: string;
@@ -84,7 +87,7 @@ interface Resume {
       link?: string;
     }>;
   };
-  session_info: {
+  session_info?: Record<string, any> | {
     operation_type: string;
     timestamp: string;
     model_used: string;
@@ -94,7 +97,7 @@ interface Resume {
 
 interface JobPosting {
   id: string;
-  response?: any;
+  response?: Record<string, any>;
   job_posting_data: {
     job_title: string;
     company?: {
@@ -219,15 +222,15 @@ export default function DataDashboard() {
     const validResumes = resumes.filter(resume => {
       const resumeData = resume.response || resume.resume_data || resume;
       return resumeData &&
-             resumeData.personal_details &&
-             resumeData.personal_details.full_name;
+             (resumeData as Record<string, any>).personal_details &&
+             (resumeData as Record<string, any>).personal_details.full_name;
     }).map(resume => {
       // Normalize the data structure
       const resumeData = resume.response || resume.resume_data || resume;
       return {
         ...resume,
-        resume_data: resumeData,
-        session_info: resumeData.session_info || resume.session_info || {}
+        resume_data: resumeData as Record<string, any>,
+        session_info: (resumeData as Record<string, any>).session_info || resume.session_info || {}
       };
     });
 
@@ -252,49 +255,49 @@ export default function DataDashboard() {
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5" />
                   <CardTitle className="text-lg">
-                    {resume.resume_data?.personal_details?.full_name || 'Unknown Name'}
+                    {(resume.resume_data as Record<string, any>)?.personal_details?.full_name || 'Unknown Name'}
                   </CardTitle>
                 </div>
                 <div className="flex items-center space-x-2">
-                  {resume.resume_data.inferred_experience_level && (
+                  {(resume.resume_data as Record<string, any>).inferred_experience_level && (
                     <Badge variant="secondary">
-                      {resume.resume_data.inferred_experience_level}
+                      {(resume.resume_data as Record<string, any>).inferred_experience_level}
                     </Badge>
                   )}
-                  {resume.resume_data.total_years_experience && (
+                  {(resume.resume_data as Record<string, any>).total_years_experience && (
                     <Badge variant="outline">
-                      {resume.resume_data.total_years_experience} years exp.
+                      {(resume.resume_data as Record<string, any>).total_years_experience} years exp.
                     </Badge>
                   )}
                 </div>
               </div>
               <CardDescription>
-                Parsed on {formatDate(resume.created_at)} using {resume.session_info?.model_used || 'Unknown model'}
+                Parsed on {formatDate(resume.created_at)} using {(resume.session_info as Record<string, any>)?.model_used || 'Unknown model'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Contact Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {resume.resume_data.personal_details.email && (
+                {(resume.resume_data as Record<string, any>).personal_details?.email && (
                   <div className="flex items-center space-x-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{resume.resume_data.personal_details.email}</span>
+                    <span className="text-sm">{(resume.resume_data as Record<string, any>).personal_details.email}</span>
                   </div>
                 )}
-                {resume.resume_data.personal_details.phone_number && (
+                {(resume.resume_data as Record<string, any>).personal_details?.phone_number && (
                   <div className="flex items-center space-x-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{resume.resume_data.personal_details.phone_number}</span>
+                    <span className="text-sm">{(resume.resume_data as Record<string, any>).personal_details.phone_number}</span>
                   </div>
                 )}
-                {resume.resume_data.personal_details.location && (
+                {(resume.resume_data as Record<string, any>).personal_details?.location && (
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
                       {[
-                        resume.resume_data.personal_details.location.city,
-                        resume.resume_data.personal_details.location.state,
-                        resume.resume_data.personal_details.location.countryCode
+                        (resume.resume_data as Record<string, any>).personal_details.location.city,
+                        (resume.resume_data as Record<string, any>).personal_details.location.state,
+                        (resume.resume_data as Record<string, any>).personal_details.location.countryCode
                       ].filter(Boolean).join(', ')}
                     </span>
                   </div>
@@ -302,24 +305,24 @@ export default function DataDashboard() {
               </div>
 
               {/* Professional Summary */}
-              {resume.resume_data.professional_summary && (
+              {(resume.resume_data as Record<string, any>).professional_summary && (
                 <div>
                   <h4 className="font-semibold mb-2">Professional Summary</h4>
                   <p className="text-sm text-muted-foreground">
-                    {resume.resume_data.professional_summary}
+                    {(resume.resume_data as Record<string, any>).professional_summary}
                   </p>
                 </div>
               )}
 
               {/* Work Experience */}
-              {resume.resume_data.work_experience && resume.resume_data.work_experience.length > 0 && (
+              {(resume.resume_data as Record<string, any>).work_experience && (resume.resume_data as Record<string, any>).work_experience.length > 0 && (
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center">
                     <Briefcase className="h-4 w-4 mr-2" />
                     Work Experience
                   </h4>
                   <div className="space-y-2">
-                    {resume.resume_data.work_experience.slice(0, 3).map((exp: any, index: number) => (
+                    {(resume.resume_data as Record<string, any>).work_experience.slice(0, 3).map((exp: Record<string, any>, index: number) => (
                       <div key={index} className="border-l-2 border-muted pl-4">
                         <div className="flex items-center justify-between">
                           <h5 className="font-medium">{exp.job_title}</h5>
@@ -331,9 +334,9 @@ export default function DataDashboard() {
                         </p>
                       </div>
                     ))}
-                    {resume.resume_data.work_experience.length > 3 && (
+                    {(resume.resume_data as Record<string, any>).work_experience.length > 3 && (
                       <p className="text-xs text-muted-foreground">
-                        +{resume.resume_data.work_experience.length - 3} more positions
+                        +{(resume.resume_data as Record<string, any>).work_experience.length - 3} more positions
                       </p>
                     )}
                   </div>
@@ -341,7 +344,7 @@ export default function DataDashboard() {
               )}
 
               {/* Skills */}
-              {resume.resume_data.skills?.technical && (
+              {(resume.resume_data as Record<string, any>).skills?.technical && (
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center">
                     <Code className="h-4 w-4 mr-2" />
@@ -349,11 +352,11 @@ export default function DataDashboard() {
                   </h4>
                   <div className="flex flex-wrap gap-1">
                     {[
-                      ...(resume.resume_data.skills.technical.programming_languages || []),
-                      ...(resume.resume_data.skills.technical.frameworks_libraries || []),
-                      ...(resume.resume_data.skills.technical.databases || []),
-                      ...(resume.resume_data.skills.technical.cloud_platforms || []),
-                      ...(resume.resume_data.skills.technical.tools_technologies || [])
+                      ...((resume.resume_data as Record<string, any>).skills.technical.programming_languages || []),
+                      ...((resume.resume_data as Record<string, any>).skills.technical.frameworks_libraries || []),
+                      ...((resume.resume_data as Record<string, any>).skills.technical.databases || []),
+                      ...((resume.resume_data as Record<string, any>).skills.technical.cloud_platforms || []),
+                      ...((resume.resume_data as Record<string, any>).skills.technical.tools_technologies || [])
                     ].slice(0, 10).map((skill, index) => (
                       <Badge key={index} variant="outline" className="text-xs">
                         {skill}
@@ -364,9 +367,9 @@ export default function DataDashboard() {
               )}
 
               {/* Links */}
-              {resume.resume_data.personal_details.links && resume.resume_data.personal_details.links.length > 0 && (
+              {(resume.resume_data as Record<string, any>).personal_details?.links && (resume.resume_data as Record<string, any>).personal_details.links.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {resume.resume_data.personal_details.links.map((link: any, index: number) => (
+                  {(resume.resume_data as Record<string, any>).personal_details.links.map((link: Record<string, any>, index: number) => (
                     <a
                       key={index}
                       href={link.url}

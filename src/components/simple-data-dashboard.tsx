@@ -9,9 +9,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function SimpleDataDashboard() {
-  const [resumes, setResumes] = useState<any[]>([]);
-  const [jobPostings, setJobPostings] = useState<any[]>([]);
-  const [compatibilityScores, setCompatibilityScores] = useState<any[]>([]);
+  const [resumes, setResumes] = useState<Record<string, any>[]>([]);
+  const [jobPostings, setJobPostings] = useState<Record<string, any>[]>([]);
+  const [compatibilityScores, setCompatibilityScores] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('analytics');
@@ -459,6 +459,7 @@ export default function SimpleDataDashboard() {
     );
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const generateCompatibilityScore = async () => {
     if (resumes.length === 0 || jobPostings.length === 0) {
       alert('You need at least one resume and one job posting to generate compatibility scores.');
