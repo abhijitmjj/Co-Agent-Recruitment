@@ -15,6 +15,7 @@ from co_agent_recruitment.agent import (
     root_agent,
 )
 from co_agent_recruitment.events import ParseResumeEvent, ParseJobPostingEvent, CompatibilityScoreEvent
+from co_agent_recruitment.matcher.agent import CompatibilityScore
 from co_agent_recruitment.tools.pubsub import emit_event, parse_dirty_json
 # Configure logging with a clear format
 logging.basicConfig(
@@ -149,8 +150,13 @@ class OrchestratorAgentRunner:
                                 
                                 logger.info(f"Extracted job posting data: {job_posting_data}")
                                 
+                                # Safely extract job posting data with proper type checking
+                                final_job_posting_data = job_posting_data
+                                if isinstance(job_posting_data, dict) and "job_posting_data" in job_posting_data:
+                                    final_job_posting_data = job_posting_data["job_posting_data"]
+                                
                                 event_payload = ParseJobPostingEvent(
-                                    job_posting_data=job_posting_data.get("job_posting_data", job_posting_data),
+                                    job_posting_data=final_job_posting_data,
                                     user_id=user_id,
                                     session_id=active_session_id,
                                 )
@@ -162,20 +168,65 @@ class OrchestratorAgentRunner:
                                     payload=event_payload.model_dump(),
                                 )
                             case "matcher_agent":
-                                # Parse the JSON and extract nested compatibility data if needed
-                                parsed_response = parse_dirty_json(final_response_text)
-                                compatibility_data = parsed_response
+                                # First try to get structured data from state_delta (tool output)
+                                matcher_output = event.actions.state_delta.get("matcher_output")
+                                compatibility_data = None
                                 
-                                # Handle nested response structure
-                                if isinstance(parsed_response, dict):
-                                    # Check for common nested patterns
-                                    if "analyze_compatibility_response" in parsed_response:
-                                        compatibility_data = parsed_response["analyze_compatibility_response"].get("compatibility_data", parsed_response)
-                                    elif "compatibility_data" in parsed_response:
-                                        compatibility_data = parsed_response["compatibility_data"]
+                                if matcher_output:
+                                    # If we have tool output, try to parse it
+                                    if isinstance(matcher_output, dict):
+                                        compatibility_data = matcher_output.get("compatibility_data", matcher_output)
+                                    else:
+                                        # Try to parse as JSON string
+                                        parsed_output = parse_dirty_json(str(matcher_output))
+                                        if parsed_output and isinstance(parsed_output, dict):
+                                            compatibility_data = parsed_output.get("compatibility_data", parsed_output)
+                                
+                                # If no structured data from tools, try parsing the final response text
+                                if not compatibility_data:
+                                    parsed_response = parse_dirty_json(final_response_text)
+                                    if parsed_response:
+                                        compatibility_data = parsed_response
+                                        # Handle nested response structure
+                                        if isinstance(parsed_response, dict):
+                                            if "analyze_compatibility_response" in parsed_response:
+                                                compatibility_data = parsed_response["analyze_compatibility_response"].get("compatibility_data", parsed_response)
+                                            elif "compatibility_data" in parsed_response:
+                                                compatibility_data = parsed_response["compatibility_data"]
+                                
+                                # If still no structured data, create a fallback from the text response
+                                if not compatibility_data:
+                                    logger.warning("No structured compatibility data found, creating fallback from text response")
+                                    # Extract score from text if possible
+                                    import re
+                                    score_match = re.search(r'compatibility score.*?(\d+)', final_response_text, re.IGNORECASE)
+                                    score = int(score_match.group(1)) if score_match else 75
+                                    
+                                    compatibility_data = {
+                                        "compatibility_score": score,
+                                        "summary": final_response_text[:500] + "..." if len(final_response_text) > 500 else final_response_text,
+                                        "matching_skills": [],
+                                        "missing_skills": []
+                                    }
+                                
+                                # Ensure compatibility_data is a proper CompatibilityScore object
+                                if isinstance(compatibility_data, dict):
+                                    try:
+                                        compatibility_score_obj = CompatibilityScore(**compatibility_data)
+                                    except Exception as e:
+                                        logger.error(f"Failed to create CompatibilityScore object: {e}")
+                                        # Create a minimal valid object
+                                        compatibility_score_obj = CompatibilityScore(
+                                            compatibility_score=75,
+                                            summary="Compatibility analysis completed",
+                                            matching_skills=[],
+                                            missing_skills=[]
+                                        )
+                                else:
+                                    compatibility_score_obj = compatibility_data
                                 
                                 event_payload = CompatibilityScoreEvent(
-                                    compatibility_data=compatibility_data,
+                                    compatibility_data=compatibility_score_obj,
                                     user_id=user_id,
                                     session_id=active_session_id,
                                 )

@@ -94,6 +94,7 @@ interface Resume {
 
 interface JobPosting {
   id: string;
+  response?: any;
   job_posting_data: {
     job_title: string;
     company?: {
@@ -501,10 +502,10 @@ export default function DataDashboard() {
                 <div>
                   <h4 className="font-semibold mb-2">Key Responsibilities</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    {posting.job_posting_data.key_responsibilities.slice(0, 5).map((resp, index) => (
+                    {posting.job_posting_data.key_responsibilities.slice(0, 5).map((resp: string, index: number) => (
                       <li key={index} className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>{resp}</span>
+                      <span className="mr-2">•</span>
+                      <span>{resp}</span>
                       </li>
                     ))}
                     {posting.job_posting_data.key_responsibilities.length > 5 && (

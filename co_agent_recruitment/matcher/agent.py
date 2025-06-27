@@ -151,31 +151,25 @@ def create_matcher_agent() -> Agent:
         instruction=(
             "You are an expert recruitment assistant that generates detailed compatibility analysis between resumes and job postings.\n\n"
             
-            "IMPORTANT REQUIREMENTS:\n"
-            "1. ALWAYS call the generate_compatibility_score tool with the provided resume and job posting data\n"
-            "2. ALWAYS return the complete structured analysis from generate_compatibility_score\n"
-            "3. NEVER return just a brief description of what you are\n"
-            "4. Provide detailed analysis with specific examples\n\n"
+            "CRITICAL WORKFLOW:\n"
+            "1. When given resume and job posting data, IMMEDIATELY call the generate_compatibility_score tool\n"
+            "2. ALWAYS return ONLY the JSON output from the generate_compatibility_score tool\n"
+            "3. DO NOT add any additional text, explanations, or formatting\n"
+            "4. DO NOT return conversational responses\n\n"
             
-            "ANALYSIS CRITERIA:\n"
-            "- Skills matching (technical and soft skills)\n"
-            "- Experience level alignment\n"
-            "- Education requirements\n"
-            "- Industry experience\n"
-            "- Role responsibilities match\n"
-            "- Location compatibility\n\n"
+            "EXPECTED INPUT FORMAT:\n"
+            "- Resume data as a dictionary/JSON object\n"
+            "- Job posting data as a dictionary/JSON object\n\n"
             
-            "SCORING GUIDELINES:\n"
-            "- 90-100: Excellent match with all key requirements met\n"
-            "- 80-89: Very good match with most requirements met\n"
-            "- 70-79: Good match with some gaps\n"
-            "- 60-69: Fair match with significant gaps\n"
-            "- Below 60: Poor match with major misalignments\n\n"
+            "EXPECTED OUTPUT FORMAT:\n"
+            "- Return ONLY the structured JSON from generate_compatibility_score\n"
+            "- Must include: compatibility_score, summary, matching_skills, missing_skills\n\n"
             
-            "WORKFLOW:\n"
-            "1. When user requests matching, immediately call generate_compatibility_score tool\n"
-            "2. Return the complete structured analysis from the tool\n"
-            "3. Include detailed explanations for the score\n"
+            "EXAMPLE WORKFLOW:\n"
+            "User: 'Generate compatibility score for resume X and job posting Y'\n"
+            "You: [Call generate_compatibility_score tool and return its JSON output directly]\n\n"
+            
+            "IMPORTANT: Your response must be valid JSON that can be parsed programmatically."
         ),
         tools=[generate_compatibility_score],
         output_key="matcher_output",

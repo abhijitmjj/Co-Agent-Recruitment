@@ -129,7 +129,14 @@ export default function SimpleDataDashboard() {
 
     return (
       <div className="space-y-6">
-        <h3 className="text-xl font-semibold">Analytics Overview</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold">Analytics Overview</h3>
+          {compatibilityScores.length === 0 && resumes.length > 0 && jobPostings.length > 0 && (
+            <Button onClick={generateCompatibilityScore} size="sm">
+              Generate Sample Compatibility Score
+            </Button>
+          )}
+        </div>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -452,12 +459,61 @@ export default function SimpleDataDashboard() {
     );
   };
 
+  const generateCompatibilityScore = async () => {
+    if (resumes.length === 0 || jobPostings.length === 0) {
+      alert('You need at least one resume and one job posting to generate compatibility scores.');
+      return;
+    }
+
+    try {
+      // Use the first resume and first job posting for demo
+      const resume = resumes[0];
+      const jobPosting = jobPostings[0];
+      
+      const response = await fetch('/api/generate-compatibility', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          resumeId: resume.id,
+          jobPostingId: jobPosting.id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate compatibility score');
+      }
+
+      const result = await response.json();
+      alert('Compatibility score generated! Refresh the page to see the results.');
+      
+      // Refresh data to show the new compatibility score
+      fetchData();
+    } catch (error) {
+      console.error('Error generating compatibility score:', error);
+      alert('Failed to generate compatibility score. Please try again.');
+    }
+  };
+
   const renderCompatibilityScores = () => {
     if (compatibilityScores.length === 0) {
       return (
-        <Alert>
-          <AlertDescription>No compatibility scores found. Run a matching analysis to get started.</AlertDescription>
-        </Alert>
+        <div className="space-y-4">
+          <Alert>
+            <AlertDescription>No compatibility scores found. Run a matching analysis to get started.</AlertDescription>
+          </Alert>
+          {resumes.length > 0 && jobPostings.length > 0 && (
+            <div className="text-center">
+              <Button onClick={generateCompatibilityScore} className="mt-4">
+                Generate Sample Compatibility Score
+              </Button>
+              <p className="text-sm text-muted-foreground mt-2">
+                This will create a compatibility analysis between your first resume and first job posting.
+              </p>
+            </div>
+          )}
+        </div>
       );
     }
 
