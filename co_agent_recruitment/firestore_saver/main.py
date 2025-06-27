@@ -8,8 +8,13 @@ import logging
 import firebase_admin
 from firebase_admin import credentials, firestore
 from pydantic import ValidationError
-from co_agent_recruitment.events import ParseResumeEvent, ParseJobPostingEvent, CompatibilityScoreEvent
+from co_agent_recruitment.events import (
+    ParseResumeEvent,
+    ParseJobPostingEvent,
+    CompatibilityScoreEvent,
+)
 import dotenv
+
 # Load environment variables from .env file
 dotenv.load_dotenv()
 
@@ -24,9 +29,12 @@ logger = logging.getLogger(__name__)
 # This global initialization is still the correct pattern.
 if not firebase_admin._apps:
     cred = credentials.ApplicationDefault()
-    firebase_admin.initialize_app(cred, {
-        'projectId': os.environ.get('GCP_PROJECT'),
-    })
+    firebase_admin.initialize_app(
+        cred,
+        {
+            "projectId": os.environ.get("GCP_PROJECT"),
+        },
+    )
 
 db = firestore.client()
 
@@ -34,29 +42,38 @@ db = firestore.client()
 def save_resume(event: ParseResumeEvent):
     """Saves resume data to Firestore."""
     try:
-        doc_ref = db.collection('candidates').add(event.model_dump())
-        logger.info(f"Successfully created document with ID: {doc_ref[1].id} in candidates collection")
+        doc_ref = db.collection("candidates").add(event.model_dump())
+        logger.info(
+            f"Successfully created document with ID: {doc_ref[1].id} in candidates collection"
+        )
     except Exception as e:
         logger.error(f"Error writing resume to Firestore: {e}")
         raise
 
+
 def save_job_posting(event: ParseJobPostingEvent):
     """Saves job posting data to Firestore."""
     try:
-        doc_ref = db.collection('jobPostings').add(event.model_dump())
-        logger.info(f"Successfully created document with ID: {doc_ref[1].id} in jobPostings collection")
+        doc_ref = db.collection("jobPostings").add(event.model_dump())
+        logger.info(
+            f"Successfully created document with ID: {doc_ref[1].id} in jobPostings collection"
+        )
     except Exception as e:
         logger.error(f"Error writing job posting to Firestore: {e}")
         raise
 
+
 def save_compatibility_score(event: CompatibilityScoreEvent):
     """Saves compatibility score data to Firestore."""
     try:
-        doc_ref = db.collection('compatibility_scores').add(event.model_dump())
-        logger.info(f"Successfully created document with ID: {doc_ref[1].id} in compatibility_scores collection")
+        doc_ref = db.collection("compatibility_scores").add(event.model_dump())
+        logger.info(
+            f"Successfully created document with ID: {doc_ref[1].id} in compatibility_scores collection"
+        )
     except Exception as e:
         logger.error(f"Error writing compatibility score to Firestore: {e}")
         raise
+
 
 # Decorator to register the function as a CloudEvent handler for Pub/Sub
 @functions_framework.cloud_event
@@ -64,7 +81,7 @@ def save_to_firestore(cloud_event):
     """
     Triggered by a message on a Pub/Sub topic and saves data to Firestore.
     This version uses the modern functions_framework.
-    
+
     Args:
          cloud_event (cloudevents.http.CloudEvent): The event payload.
     """
@@ -92,7 +109,13 @@ def save_to_firestore(cloud_event):
         else:
             logger.warning(f"Unknown event type: {event_name}")
 
-    except (ValidationError, KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
+    except (
+        ValidationError,
+        KeyError,
+        TypeError,
+        ValueError,
+        json.JSONDecodeError,
+    ) as e:
         logger.error(f"Error decoding or parsing Pub/Sub message: {e}")
         # Exit gracefully if the message format is unexpected.
         return

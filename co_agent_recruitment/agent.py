@@ -4,7 +4,6 @@ import os
 import logging  # Add logging import
 from typing import Optional
 from google.adk.agents import Agent
-from pydantic_ai import Agent as PydanticAgent
 from .firestore_session_service import FirestoreSessionService
 from google.adk.sessions.session import Session
 from google.adk.agents.callback_context import CallbackContext
@@ -127,42 +126,51 @@ async def orchestrator_after_callback(callback_context: CallbackContext) -> None
     try:
         # Get the current session and update its state
         session = callback_context._invocation_context.session
-        
+
         # Create a clean state dictionary with only basic serializable data
         state_dict = {}
-        
+
         # Extract only the essential state information we need
-        if hasattr(callback_context.state, 'get'):
+        if hasattr(callback_context.state, "get"):
             # If state acts like a dict, extract key values safely
             essential_keys = [
-                'interaction_count', 'conversation_started', 'last_interaction_start',
-                'last_interaction_end', 'last_interaction_completed', 'last_operation_status',
-                'current_session_info', 'session_id'
+                "interaction_count",
+                "conversation_started",
+                "last_interaction_start",
+                "last_interaction_end",
+                "last_interaction_completed",
+                "last_operation_status",
+                "current_session_info",
+                "session_id",
             ]
-            
+
             for key in essential_keys:
                 try:
                     value = callback_context.state.get(key)
-                    if value is not None and isinstance(value, (str, int, float, bool, dict, list)):
+                    if value is not None and isinstance(
+                        value, (str, int, float, bool, dict, list)
+                    ):
                         state_dict[key] = value
                 except Exception:
                     continue
-        
+
         # Ensure we have at least the interaction count
-        if 'interaction_count' not in state_dict:
-            state_dict['interaction_count'] = 1
-            
+        if "interaction_count" not in state_dict:
+            state_dict["interaction_count"] = 1
+
         # Update session state safely
         session.state.clear()
         session.state.update(state_dict)
         session.last_update_time = datetime.datetime.now().timestamp()
-        
+
         await _shared_session_service.update_session(session)
         logger.info(
             f"Session state saved to Firestore for session {session_id} with interaction count {state_dict.get('interaction_count', 0)}"
         )
     except Exception as e:
-        logger.error(f"Error saving session state to Firestore for session {session_id}: {e}")
+        logger.error(
+            f"Error saving session state to Firestore for session {session_id}: {e}"
+        )
 
     logger.info(
         f"Orchestrator interaction #{callback_context.state.get('interaction_count', 0)} completed for user: {user_id} on session {session_id}"
@@ -178,34 +186,28 @@ def create_orchestrator_agent() -> Agent:
         instruction=(
             "You are an orchestrator agent that manages resume parsing, job posting parsing, and matching with session management. "
             "Your purpose is to dispatch work to the appropriate agents (resume parser, job posting parser, or matcher) based on your input and return structured JSON data, always including session information.\\n\\n"
-            
             "IMPORTANT RULES:\\n"
             "1. You must ALWAYS include session information in your response\\n"
             "2. You must ALWAYS return structured JSON data, never plain text responses\\n"
             "3. You must properly identify the type of content the user is providing\\n\\n"
-            
             "CONTENT IDENTIFICATION:\\n"
             "- If the user asks 'who are you?', respond with your identity and purpose\\n"
             "- If the user says 'parse this:', 'analyze this:', or provides content that looks like a resume or job posting, identify the content type\\n"
             "- Resume indicators: personal details, work experience, education, skills, contact information\\n"
             "- Job posting indicators: job title, company description, requirements, responsibilities, qualifications\\n\\n"
-            
             "PROCESSING WORKFLOW:\\n"
             "When the user provides a RESUME:\\n"
             "1. Transfer to resume_parser_agent\\n"
             "2. Call parse_resume with the resume text\\n"
             "3. Return the complete structured JSON with session information\\n\\n"
-            
             "When the user provides a JOB POSTING:\\n"
             "1. Transfer to job_posting_agent\\n"
             "2. Call analyze_job_posting with the job posting text\\n"
             "3. Return the complete structured JSON with session information\\n\\n"
-            
             "When the user requests MATCHING:\\n"
             "1. Transfer to matcher_agent\\n"
             "2. Call generate_compatibility_score with both resume and job posting data\\n"
             "3. Return the compatibility analysis with session information\\n\\n"
-            
             "RESPONSE FORMAT:\\n"
             "Always return structured JSON responses. Never return plain text explanations unless specifically asked about your identity.\\n"
         ),
@@ -217,7 +219,9 @@ def create_orchestrator_agent() -> Agent:
 
 
 # Session management functions for external API use
-async def create_session_for_user(user_id: str, session_id: Optional[str] = None) -> str:
+async def create_session_for_user(
+    user_id: str, session_id: Optional[str] = None
+) -> str:
     """Create a new session for a user and return the session ID.
 
     Args:
@@ -252,14 +256,20 @@ async def get_or_create_session_for_user(
                 app_name=APP_NAME, user_id=user_id, session_id=session_id
             )
             if session:
-                logger.info(f"Reusing existing session {session_id} for user {user_id} with {session.state.get('interaction_count', 0)} previous interactions")
+                logger.info(
+                    f"Reusing existing session {session_id} for user {user_id} with {session.state.get('interaction_count', 0)} previous interactions"
+                )
                 return session.id
             else:
-                logger.info(f"Session {session_id} not found for user {user_id}, creating new session with same ID")
+                logger.info(
+                    f"Session {session_id} not found for user {user_id}, creating new session with same ID"
+                )
                 # Session ID was provided but doesn't exist, create it with the same ID
                 return await create_session_for_user(user_id, session_id)
         except Exception as e:
-            logger.warning(f"Error getting session {session_id} for user {user_id}: {e}, creating new session")
+            logger.warning(
+                f"Error getting session {session_id} for user {user_id}: {e}, creating new session"
+            )
             # If there's an error getting the session, create a new one with the same ID
             return await create_session_for_user(user_id, session_id)
 

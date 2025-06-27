@@ -4,15 +4,12 @@ Test script to validate agent improvements using evaluation set data.
 """
 
 import asyncio
-import json
 import logging
-from typing import Dict, Any
-from agent_engine import get_agent_runner
+from co_agent_recruitment.agent_engine import get_agent_runner
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -76,22 +73,22 @@ async def test_orchestrator_identity():
     """Test that the orchestrator properly identifies itself."""
     logger.info("Testing orchestrator identity...")
     runner = get_agent_runner()
-    
+
     response = await runner.run_async(
         user_id="test_user_identity",
         query="who are you?",
-        session_id="test_session_identity"
+        session_id="test_session_identity",
     )
-    
+
     logger.info(f"Identity response: {response}")
-    
+
     # Check if response contains proper identity information
     identity_indicators = [
         "orchestrator" in response.lower(),
         ("purpose" in response.lower() or "manage" in response.lower()),
-        ("json" in response.lower() or "structured" in response.lower())
+        ("json" in response.lower() or "structured" in response.lower()),
     ]
-    
+
     if any(identity_indicators):
         logger.info("✅ Identity test PASSED")
         return True
@@ -105,54 +102,53 @@ async def test_resume_parsing():
     """Test that resume parsing returns structured JSON."""
     logger.info("Testing resume parsing...")
     runner = get_agent_runner()
-    
+
     response = await runner.run_async(
         user_id="test_user_resume",
         query=f"parse this - {RESUME_TEXT}",
-        session_id="test_session_resume"
+        session_id="test_session_resume",
     )
-    
+
     logger.info(f"Resume parsing response length: {len(response)}")
     logger.info(f"Resume parsing response preview: {response[:500]}...")
-    
+
     # Check if it's NOT just a brief agent description (main failure case from eval set)
     is_brief_agent_description = (
-        "I am the" in response and
-        "resume_parser_agent" in response and
-        len(response) < 300 and
-        "purpose" in response.lower()
+        "I am the" in response
+        and "resume_parser_agent" in response
+        and len(response) < 300
+        and "purpose" in response.lower()
     )
-    
+
     # Check if response contains JSON structure
     has_json_structure = "{" in response and "}" in response
-    
+
     # Check if response is substantial (not just a brief description)
     is_substantial = len(response) > 500
-    
+
     # Check for any resume-related content indicators
     content_indicators = [
         "ABHIJIT GUPTA" in response or "abhijit038@gmail.com" in response,
         "Data Scientist" in response or "TESCO" in response,
         "PhD" in response or "Machine Learning" in response,
         "Python" in response or "programming" in response,
-        "experience" in response.lower() or "skills" in response.lower()
+        "experience" in response.lower() or "skills" in response.lower(),
     ]
-    
+
     has_resume_content = any(content_indicators)
-    
+
     # Success criteria: Not a brief description AND (has JSON structure OR substantial content with resume data)
-    success = (
-        not is_brief_agent_description and
-        (has_json_structure or (is_substantial and has_resume_content))
+    success = not is_brief_agent_description and (
+        has_json_structure or (is_substantial and has_resume_content)
     )
-    
-    logger.info(f"Test criteria:")
+
+    logger.info("Test criteria:")
     logger.info(f"  - Not brief agent description: {not is_brief_agent_description}")
     logger.info(f"  - Has JSON structure: {has_json_structure}")
     logger.info(f"  - Is substantial (>500 chars): {is_substantial}")
     logger.info(f"  - Has resume content: {has_resume_content}")
     logger.info(f"  - Overall success: {success}")
-    
+
     if success:
         logger.info("✅ Resume parsing test PASSED")
         return True
@@ -166,29 +162,31 @@ async def test_job_posting_analysis():
     """Test that job posting analysis returns structured JSON."""
     logger.info("Testing job posting analysis...")
     runner = get_agent_runner()
-    
+
     response = await runner.run_async(
         user_id="test_user_job",
         query=f"analyse this - {JOB_POSTING_TEXT}",
-        session_id="test_session_job"
+        session_id="test_session_job",
     )
-    
+
     logger.info(f"Job posting analysis response length: {len(response)}")
-    
+
     # Check if response contains structured data indicators
     success_indicators = [
         "job_title" in response,
         "company" in response,
         "industry_type" in response,
-        "session_info" in response
+        "session_info" in response,
     ]
-    
+
     if all(success_indicators):
         logger.info("✅ Job posting analysis test PASSED")
         return True
     else:
         logger.error("❌ Job posting analysis test FAILED")
-        logger.error(f"Missing indicators: {[i for i, x in enumerate(success_indicators) if not x]}")
+        logger.error(
+            f"Missing indicators: {[i for i, x in enumerate(success_indicators) if not x]}"
+        )
         return False
 
 
@@ -196,54 +194,53 @@ async def test_matching():
     """Test that matching returns detailed compatibility analysis."""
     logger.info("Testing matching functionality...")
     runner = get_agent_runner()
-    
+
     # First parse resume and job posting to get structured data
     resume_response = await runner.run_async(
         user_id="test_user_match",
         query=f"parse this - {RESUME_TEXT}",
-        session_id="test_session_match"
+        session_id="test_session_match",
     )
-    
+
     job_response = await runner.run_async(
         user_id="test_user_match",
         query=f"analyse this - {JOB_POSTING_TEXT}",
-        session_id="test_session_match"
+        session_id="test_session_match",
     )
-    
+
     # Now test matching
     match_response = await runner.run_async(
-        user_id="test_user_match",
-        query="match",
-        session_id="test_session_match"
+        user_id="test_user_match", query="match", session_id="test_session_match"
     )
-    
+
     logger.info(f"Matching response length: {len(match_response)}")
-    
+
     # Check if response contains compatibility analysis indicators OR correctly asks for data
     compatibility_indicators = [
         "compatibility" in match_response.lower() or "score" in match_response.lower(),
         "matching" in match_response.lower() or "skills" in match_response.lower(),
-        "%" in match_response or "score" in match_response.lower()
+        "%" in match_response or "score" in match_response.lower(),
     ]
-    
+
     # Check if it correctly asks for required data (which is also a valid response)
     data_request_indicators = [
-        "information_needed" in match_response.lower() or "need" in match_response.lower(),
+        "information_needed" in match_response.lower()
+        or "need" in match_response.lower(),
         "resume" in match_response.lower() and "job posting" in match_response.lower(),
-        "provide" in match_response.lower() or "required" in match_response.lower()
+        "provide" in match_response.lower() or "required" in match_response.lower(),
     ]
-    
+
     # Success if it either provides compatibility analysis OR correctly asks for data
     has_compatibility_analysis = any(compatibility_indicators)
     correctly_asks_for_data = all(data_request_indicators)
-    
+
     success = has_compatibility_analysis or correctly_asks_for_data
-    
-    logger.info(f"Test criteria:")
+
+    logger.info("Test criteria:")
     logger.info(f"  - Has compatibility analysis: {has_compatibility_analysis}")
     logger.info(f"  - Correctly asks for data: {correctly_asks_for_data}")
     logger.info(f"  - Overall success: {success}")
-    
+
     if success:
         logger.info("✅ Matching test PASSED")
         return True
@@ -256,48 +253,48 @@ async def test_matching():
 async def run_all_tests():
     """Run all improvement tests."""
     logger.info("🚀 Starting agent improvement tests...")
-    
+
     tests = [
         ("Orchestrator Identity", test_orchestrator_identity),
         ("Resume Parsing", test_resume_parsing),
         ("Job Posting Analysis", test_job_posting_analysis),
-        ("Matching", test_matching)
+        ("Matching", test_matching),
     ]
-    
+
     results = {}
-    
+
     for test_name, test_func in tests:
         try:
-            logger.info(f"\n{'='*50}")
+            logger.info(f"\n{'=' * 50}")
             logger.info(f"Running: {test_name}")
-            logger.info(f"{'='*50}")
-            
+            logger.info(f"{'=' * 50}")
+
             result = await test_func()
             results[test_name] = result
-            
+
         except Exception as e:
             logger.error(f"❌ {test_name} test FAILED with exception: {e}")
             results[test_name] = False
-    
+
     # Summary
-    logger.info(f"\n{'='*50}")
+    logger.info(f"\n{'=' * 50}")
     logger.info("TEST SUMMARY")
-    logger.info(f"{'='*50}")
-    
+    logger.info(f"{'=' * 50}")
+
     passed = sum(results.values())
     total = len(results)
-    
+
     for test_name, result in results.items():
         status = "✅ PASSED" if result else "❌ FAILED"
         logger.info(f"{test_name}: {status}")
-    
+
     logger.info(f"\nOverall: {passed}/{total} tests passed")
-    
+
     if passed == total:
         logger.info("🎉 All tests passed! Agent improvements are working correctly.")
     else:
         logger.warning(f"⚠️  {total - passed} test(s) failed. Review the improvements.")
-    
+
     return results
 
 

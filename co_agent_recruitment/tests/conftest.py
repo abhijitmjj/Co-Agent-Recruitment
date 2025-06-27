@@ -1,5 +1,5 @@
 import pytest
-import os
+
 
 @pytest.fixture(scope="function", autouse=True)
 def set_test_environment(monkeypatch):

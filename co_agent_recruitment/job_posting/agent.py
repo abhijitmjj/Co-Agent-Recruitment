@@ -262,19 +262,16 @@ def create_job_posting_agent() -> Agent:
         instruction=(
             "You are an expert job posting parser. Your task is to transform the unstructured job posting text provided below "
             "into a single, structured, and comprehensive JSON object.\n\n"
-            
             "IMPORTANT REQUIREMENTS:\n"
             "1. ALWAYS call the analyze_job_posting tool with the provided job posting text\n"
             "2. ALWAYS return the complete structured JSON response from analyze_job_posting\n"
             "3. NEVER return just a brief description of what you are\n"
             "4. Extract ALL information explicitly present in the text\n\n"
-            
             "PARSING RULES:\n"
             "- Extract only information that is explicitly present in the text\n"
             "- Do not make assumptions or add information that is not clearly stated\n"
             "- Include session information in the response\n"
             "- Return structured JSON data, not plain text\n\n"
-            
             "WORKFLOW:\n"
             "1. When user provides job posting text, immediately call analyze_job_posting tool\n"
             "2. Return the complete structured JSON output from the tool\n"

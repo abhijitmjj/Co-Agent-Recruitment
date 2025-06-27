@@ -1,4 +1,3 @@
-import datetime
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import LlmResponse, LlmRequest
 from google.adk.tools.tool_context import ToolContext
@@ -27,7 +26,11 @@ async def before_model_callback(
     prefix = f"Session ID: {session.id}\nUser ID: {session.user_id}\n"
     if llm_request.config and llm_request.config.system_instruction:
         # If system instruction already exists, prepend the session/user info
-        existing_instruction = str(llm_request.config.system_instruction) if llm_request.config.system_instruction else ""
+        existing_instruction = (
+            str(llm_request.config.system_instruction)
+            if llm_request.config.system_instruction
+            else ""
+        )
         llm_request.config.system_instruction = prefix + existing_instruction
 
 
@@ -42,12 +45,8 @@ async def after_model_callback(
     # Add session and user IDs to the response metadata
     if llm_response.custom_metadata is None:
         llm_response.custom_metadata = json.loads(
-            json.dumps({
-                "session_id": session.id,
-                "user_id": session.user_id
-            })
+            json.dumps({"session_id": session.id, "user_id": session.user_id})
         )
-
 
 
 async def before_tool_callback(
@@ -64,7 +63,10 @@ async def before_tool_callback(
 
 
 async def after_tool_callback(
-    tool: BaseTool, args: dict[str, Any], tool_context: ToolContext, tool_response: dict[str, Any]
+    tool: BaseTool,
+    args: dict[str, Any],
+    tool_context: ToolContext,
+    tool_response: dict[str, Any],
 ) -> Optional[Dict[str, Any]]:
     """Modify tool response to include session and user IDs."""
     # Do not modify transfer or parser/posting function responses

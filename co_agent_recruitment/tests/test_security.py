@@ -1,8 +1,7 @@
 """Tests for secure agent functionality."""
 
 import pytest
-import asyncio
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch, AsyncMock
 from co_agent_recruitment.agent import (
     sanitize_input,
     parse_resume,
@@ -114,12 +113,16 @@ class TestResumeParsingErrors:
     @pytest.mark.asyncio
     async def test_parse_resume_sanitizes_input(self):
         """Test that parse_resume sanitizes input."""
-        with patch("co_agent_recruitment.resume_parser.agent.PydanticAgent") as mock_agent_class:
+        with patch(
+            "co_agent_recruitment.resume_parser.agent.PydanticAgent"
+        ) as mock_agent_class:
             mock_agent_instance = AsyncMock()
             mock_agent_class.return_value = mock_agent_instance
 
             mock_run_result = AsyncMock()
-            mock_run_result.output = Resume(personal_details=PersonalDetails(full_name="test"))
+            mock_run_result.output = Resume(
+                personal_details=PersonalDetails(full_name="test")
+            )
             mock_agent_instance.run.return_value = mock_run_result
 
             malicious_resume = (
@@ -127,7 +130,9 @@ class TestResumeParsingErrors:
             )
             parsed_output = await parse_resume(malicious_resume)
 
-            assert parsed_output["resume_data"]["personal_details"]["full_name"] == "test"
+            assert (
+                parsed_output["resume_data"]["personal_details"]["full_name"] == "test"
+            )
 
             # Check that the agent's run method was called with sanitized input
             called_args = mock_agent_instance.run.call_args
@@ -138,11 +143,21 @@ class TestResumeParsingErrors:
     @pytest.mark.asyncio
     async def test_parse_resume_handles_exceptions(self):
         """Test that parse_resume handles exceptions gracefully."""
-        with patch("co_agent_recruitment.resume_parser.agent.PydanticAgent") as mock_agent_class:
+        with patch(
+            "co_agent_recruitment.resume_parser.agent.PydanticAgent"
+        ) as mock_agent_class:
             mock_agent_class.side_effect = Exception("AI service error")
 
-            with pytest.raises(Exception, match="Failed to parse resume"):
-                await parse_resume("Valid resume text")
+            result = await parse_resume("Valid resume text")
+
+            # Should return fallback response instead of raising exception
+            assert result["operation_status"] == "error"
+            assert "Resume parsing failed" in result["error_message"]
+            assert (
+                result["resume_data"]["personal_details"]["full_name"]
+                == "Resume parsing failed"
+            )
+            assert "AI service error" in result["session_info"]["error"]
 
 
 if __name__ == "__main__":

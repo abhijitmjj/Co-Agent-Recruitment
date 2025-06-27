@@ -5,6 +5,7 @@ This module provides both a FastAPI web interface and CLI interface for the resu
 
 import asyncio
 import sys
+import os
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -93,12 +94,14 @@ class ErrorResponse(BaseModel):
 
 class EventRequest(BaseModel):
     """Request model for publishing an event."""
+
     event_name: str = Field(..., description="The name of the event to publish")
     payload: Dict[str, Any] = Field(..., description="The event payload")
 
 
 class OrchestratorRequest(BaseModel):
     """Request model for the orchestrator agent."""
+
     query: str = Field(..., description="The query to send to the orchestrator agent")
     user_id: str = Field(..., description="The user ID for the session")
     session_id: Optional[str] = Field(None, description="The session ID to use")
@@ -106,6 +109,7 @@ class OrchestratorRequest(BaseModel):
 
 class MatcherRequest(BaseModel):
     """Request model for the matcher agent."""
+
     resume_data: Dict[str, Any] = Field(..., description="Structured resume data")
     job_posting_data: Dict[str, Any] = Field(
         ..., description="Structured job posting data"
@@ -114,6 +118,7 @@ class MatcherRequest(BaseModel):
 
 class MatcherResponse(BaseModel):
     """Response model for the matcher agent."""
+
     success: bool
     data: Dict[str, Any]
     message: str
@@ -128,7 +133,6 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-import os
 
 # CORS configuration
 allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS")
@@ -155,7 +159,7 @@ else:
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,  # type: ignore
-    **cors_args
+    **cors_args,
 )
 
 

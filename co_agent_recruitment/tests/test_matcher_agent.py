@@ -4,7 +4,10 @@ Tests for the matcher agent.
 
 import pytest
 from unittest.mock import patch, AsyncMock
-from co_agent_recruitment.matcher.agent import generate_compatibility_score, CompatibilityScore
+from co_agent_recruitment.matcher.agent import (
+    generate_compatibility_score,
+    CompatibilityScore,
+)
 
 
 @pytest.mark.asyncio

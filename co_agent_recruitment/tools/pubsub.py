@@ -153,7 +153,7 @@ async def emit_event(name: str, payload: Dict) -> str:
 
     Returns:
         The message id assigned by Pub/Sub.
-    
+
     Example payload:{
         "subscription": "projects/my-project/subscriptions/my-subscription",
         "message": {

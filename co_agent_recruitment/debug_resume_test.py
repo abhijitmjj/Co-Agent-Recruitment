@@ -9,8 +9,7 @@ from agent_engine import get_agent_runner
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -66,20 +65,21 @@ Gupta, A., Kulkarni, M., Mukherjee, A. "Accurate prediction of B-form/A-form DNA
 Gupta, A., Mukherjee, A. "Prediction of good reaction coordinates and future evolution of MD trajectories using Regularized Sparse Autoencoders: A novel deep learning approach."
 Gupta, A., Mukherjee, A. "CardiGraphormer: Unveiling the Power of Self-Supervised Learning in Revolutionizing Drug Discovery", 2023, CardiGraphormer."""
 
+
 async def debug_resume_parsing():
     """Debug resume parsing to see what's actually returned."""
     logger.info("🔍 Debugging resume parsing...")
     runner = get_agent_runner()
-    
+
     response = await runner.run_async(
         user_id="debug_user",
         query=f"parse this - {RESUME_TEXT}",
-        session_id="debug_session"
+        session_id="debug_session",
     )
-    
+
     logger.info(f"📏 Response length: {len(response)}")
     logger.info(f"📄 Full response:\n{response}")
-    
+
     # Check what we're looking for
     checks = {
         "personal_details": "personal_details" in response,
@@ -97,15 +97,16 @@ async def debug_resume_parsing():
         "timestamp": "timestamp" in response,
         "operation": "operation" in response,
         "json_structure": "{" in response and "}" in response,
-        "is_brief": "I am the" in response and len(response) < 200
+        "is_brief": "I am the" in response and len(response) < 200,
     }
-    
+
     logger.info("🔍 Content checks:")
     for check, result in checks.items():
         status = "✅" if result else "❌"
         logger.info(f"  {status} {check}: {result}")
-    
+
     return response
+
 
 if __name__ == "__main__":
     asyncio.run(debug_resume_parsing())
