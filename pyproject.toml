@@ -30,6 +30,7 @@ dependencies = [
     "google-cloud-firestore>=2.11.0",
     "pandas>=2.3.0",
     "scikit-learn>=1.7.0",
+    "vertexai>=1.43.0",
 ]
 
 [build-system]

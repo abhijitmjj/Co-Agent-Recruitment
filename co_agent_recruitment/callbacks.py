@@ -1,10 +1,11 @@
 import datetime
 from google.adk.agents.callback_context import CallbackContext
-from google.adk.models import LlmResponse
+from google.adk.models import LlmResponse, LlmRequest
 from google.adk.tools.tool_context import ToolContext
 from google.adk.tools.base_tool import BaseTool
 from typing import Optional, Dict, Any
 import logging
+import json
 
 # Configure logging with a clear format
 logging.basicConfig(
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 async def before_model_callback(
-    callback_context: CallbackContext, llm_request: LlmResponse
+    callback_context: CallbackContext, llm_request: LlmRequest
 ) -> None:
     """Modify the LLM request to include session and user IDs in system instructions."""
     if not isinstance(callback_context, CallbackContext):
@@ -24,9 +25,10 @@ async def before_model_callback(
 
     session = callback_context._invocation_context.session
     prefix = f"Session ID: {session.id}\nUser ID: {session.user_id}\n"
-    llm_request.config.system_instruction = prefix + (
-        llm_request.config.system_instruction or ""
-    )
+    if llm_request.config and llm_request.config.system_instruction:
+        # If system instruction already exists, prepend the session/user info
+        existing_instruction = str(llm_request.config.system_instruction) if llm_request.config.system_instruction else ""
+        llm_request.config.system_instruction = prefix + existing_instruction
 
 
 async def after_model_callback(
@@ -37,12 +39,15 @@ async def after_model_callback(
         return
 
     session = callback_context._invocation_context.session
-    if hasattr(llm_response, "additional_kwargs"):
-        llm_response.additional_kwargs["session_id"] = session.id
-        llm_response.additional_kwargs["user_id"] = session.user_id
-        logger.info(
-            f"LLM response updated with session ID {session.id} and user ID {session.user_id}"
+    # Add session and user IDs to the response metadata
+    if llm_response.custom_metadata is None:
+        llm_response.custom_metadata = json.loads(
+            json.dumps({
+                "session_id": session.id,
+                "user_id": session.user_id
+            })
         )
+
 
 
 async def before_tool_callback(

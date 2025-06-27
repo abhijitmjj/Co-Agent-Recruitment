@@ -135,7 +135,7 @@ allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS")
 allowed_origin_regex = os.getenv("CORS_ALLOWED_ORIGIN_REGEX")
 
 # Initialize with default values
-cors_args = {
+cors_args: Dict[str, Any] = {
     "allow_credentials": True,
     "allow_methods": ["GET", "POST", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"],
@@ -154,7 +154,7 @@ else:
 
 # Add CORS middleware
 app.add_middleware(
-    CORSMiddleware,
+    CORSMiddleware,  # type: ignore
     **cors_args
 )
 

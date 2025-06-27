@@ -283,7 +283,7 @@ def get_model_name() -> str:
     return os.getenv("MODEL_ID", "gemini-2.5-flash")
 
 
-async def parse_resume(resume_text: str):
+async def parse_resume(resume_text: str) -> dict[str, Any]:
     """Parses unstructured resume text and returns a structured JSON object with session info.
 
     Args:

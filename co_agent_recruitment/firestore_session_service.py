@@ -5,7 +5,7 @@ Firestore-based session service for the Co-Agent Recruitment system.
 import logging
 from typing import Optional, Any
 from google.cloud import firestore
-from google.adk.sessions import Session, BaseSessionService
+from google.adk.sessions import Session, BaseSessionService, DatabaseSessionService
 from google.adk.sessions.base_session_service import GetSessionConfig, ListSessionsResponse
 
 logger = logging.getLogger(__name__)
