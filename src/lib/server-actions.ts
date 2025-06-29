@@ -25,8 +25,10 @@ export async function publishEventAction(
   payload: unknown,
   options: { timeout?: number; baseUrl?: string } = {}
 ): Promise<ActionResult> {
-  const { timeout = 5000, baseUrl = 'https://co-agent-recruitment-605555306967.us-central1.run.app' } = options;
-  
+  const { timeout = 5000, baseUrl = process.env.CLOUD_RUNNER_AGENT_API_URL } = options;
+  if (!baseUrl) {
+    throw new Error('Base URL for Cloud Run API is not configured');
+  }
   try {
     // Input validation
     if (!eventName || typeof eventName !== 'string') {
@@ -83,7 +85,10 @@ export async function publishQueryAction(
   sessionId?: string,
   options: { timeout?: number; baseUrl?: string } = {}
 ): Promise<ActionResult> {
-  const { timeout = 1000000, baseUrl = 'https://co-agent-recruitment-605555306967.us-central1.run.app' } = options;
+  const { timeout = 1000000, baseUrl = process.env.CLOUD_RUNNER_AGENT_API_URL } = options;
+  if (!baseUrl) {
+    throw new Error('Base URL for Cloud Run API is not configured');
+  }
 
   try {
     // Input validation

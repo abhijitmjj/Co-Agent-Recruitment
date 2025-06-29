@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Call the Python backend matcher agent
     try {
-      const cloudRunUrl = 'https://co-agent-recruitment-605555306967.us-central1.run.app/orchestrator';
+      const cloudRunUrl = `${process.env.CLOUD_RUNNER_AGENT_API_URL}/orchestrator`;
       const authHeaders = await getCloudRunAuthHeaders(cloudRunUrl);
       
       const matcherResponse = await fetch(cloudRunUrl, {
