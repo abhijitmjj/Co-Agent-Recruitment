@@ -6,6 +6,9 @@ Co-Agent-Recruitment automates the end-to-end recruitment workflow by orchestrat
 
 Built on Google's Agent Development Kit (ADK), Google Genkit AI framework, and leveraging event-driven agent-to-agent communication, Co-Agent-Recruitment provides a scalable, modular architecture for streamlined and privacy-first hiring operations.
 
+## Alpha Release
+[co-agent-recruitment-v0.5.0-alpha](https://github.com/abhijitmjj/Co-Agent-Recruitment/releases/tag/v0.5.0-alpha)
+
 ## Motivation
 
 Hiring teams face several challenges:
