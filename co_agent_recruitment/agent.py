@@ -4,16 +4,16 @@ import os
 import logging  # Add logging import
 from typing import Optional
 from google.adk.agents import Agent
-from .firestore_session_service import FirestoreSessionService
+from co_agent_recruitment.firestore_session_service import FirestoreSessionService
 from google.adk.sessions.session import Session
 from google.adk.agents.callback_context import CallbackContext
-from .job_posting.agent import job_posting_agent
-from .resume_parser.agent import (
+from co_agent_recruitment.job_posting.agent import job_posting_agent
+from co_agent_recruitment.resume_parser.agent import (
     parse_resume,
     parse_resume_agent,
     sanitize_input,
 )
-from .matcher.agent import matcher_agent
+from co_agent_recruitment.matcher.agent import matcher_agent
 import dotenv
 
 # Load environment variables from .env file

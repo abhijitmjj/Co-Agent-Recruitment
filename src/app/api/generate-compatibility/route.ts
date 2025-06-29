@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { adminApp } from '@/lib/firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getCloudRunAuthHeaders } from '@/lib/cloud-run-auth';
 
 const db = getFirestore(adminApp);
 
@@ -51,11 +52,12 @@ export async function POST(request: NextRequest) {
 
     // Call the Python backend matcher agent
     try {
-      const matcherResponse = await fetch('http://localhost:8000/orchestrator', {
+      const cloudRunUrl = 'https://co-agent-recruitment-605555306967.us-central1.run.app/orchestrator';
+      const authHeaders = await getCloudRunAuthHeaders(cloudRunUrl);
+      
+      const matcherResponse = await fetch(cloudRunUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders,
         body: JSON.stringify({
           query: `Generate compatibility score between this resume and job posting. Resume: ${JSON.stringify(resume)}. Job Posting: ${JSON.stringify(jobPosting)}`,
           user_id: session.user.id,

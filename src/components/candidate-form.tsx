@@ -32,11 +32,9 @@ import {
   type Candidate,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type Job,
-  type MatchResult,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  publishEventAction,
-  publishQueryAction
+  type MatchResult
 } from '@/lib/actions';
+import { publishQueryAction } from '@/lib/client-actions';
 import { Users, Sparkles, Briefcase, Loader2 } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
 import ResumeUploader from '@/components/resume-uploader';
@@ -120,8 +118,7 @@ export default function CandidateForm() {
     }, 100);
     
     // Publish an event after successful submission
-    await publishQueryAction(data.experienceSummary, user_id, sessionId);
-    // await publishEventAction("candidate_submitted", newCandidate);
+    await publishQueryAction(data.experienceSummary, sessionId);
   };
 
   const handleBackToForm = () => {

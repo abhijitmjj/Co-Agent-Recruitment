@@ -3,7 +3,10 @@
     "a2a-samples Docs": {
       "url": "https://gitmcp.io/google-a2a/a2a-samples/",
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [],
+      "alwaysAllow": [
+        "search_a2a_samples_code"
+      ]
     },
     "A2A Docs": {
       "url": "https://gitmcp.io/google-a2a/A2A",

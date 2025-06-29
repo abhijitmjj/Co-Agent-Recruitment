@@ -13,7 +13,8 @@ import { Label } from '@/components/ui/label'; // Keep if used, but FormLabel is
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { getSuggestedJobTitlesAction, generateSEOKeywordsAction, performMatchmakingAction, type Candidate, type Job, type MatchResult, publishQueryAction } from '@/lib/actions';
+import { getSuggestedJobTitlesAction, generateSEOKeywordsAction, performMatchmakingAction, type Candidate, type Job, type MatchResult } from '@/lib/actions';
+import { publishQueryAction } from '@/lib/client-actions';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Briefcase, Lightbulb, Search, Sparkles, UserCheck, Loader2, Eye } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
@@ -135,7 +136,7 @@ export default function CompanyPage() {
     } catch {
       enrichedJobString = 'GenAI enrichment failed.';
     }
-    await publishQueryAction(enrichedJobString, user_id, sessionId);
+    await publishQueryAction(enrichedJobString, sessionId);
     // Perform matchmaking for the new job
     setIsLoadingMatches(true);
     const matchesResult = await performMatchmakingAction(newJob, candidates);

@@ -3,24 +3,23 @@
 This module provides both a FastAPI web interface and CLI interface for the resume parsing functionality.
 """
 
-import asyncio
 import sys
 import os
+
+# Add the project root to the Python path
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
+import asyncio
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from co_agent_recruitment.agent import parse_resume
-from co_agent_recruitment.json_agents import (
-    parse_resume_json,
-    analyze_job_posting_json,
-    process_document_json,
-)
 from co_agent_recruitment.matcher.json_matcher import generate_compatibility_score_json
 from co_agent_recruitment.tools.pubsub import emit_event
 from co_agent_recruitment.agent_engine import get_agent_runner
 from co_agent_recruitment.utils import clean_text_to_ascii
-
+import uvicorn
 
 class ResumeRequest(BaseModel):
     """Request model for resume parsing."""
@@ -155,6 +154,8 @@ elif allowed_origins_str:
 else:
     # Fallback to a default for local development
     cors_args["allow_origins"] = ["http://localhost:3000"]
+    # allow all connections from https://a2a-githubaction--gen-lang-client-0249131775.us-central1.hosted.app/ and children
+    cors_args["allow_origin_regex"] = r"https://a2a-githubaction--gen-lang-client-0249131775\.us-central1\.hosted\.app(/?.*)?$"
 
 
 # Add CORS middleware
@@ -174,153 +175,6 @@ async def root():
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "service": "co-agent-recruitment"}
-
-
-@app.post(
-    "/parse-resume",
-    response_model=ResumeResponse,
-    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
-)
-async def parse_resume_endpoint(request: ResumeRequest):
-    """
-    Parse a resume from raw text and return structured data.
-
-    Args:
-        request: ResumeRequest containing the resume text
-
-    Returns:
-        ResumeResponse with parsed resume data
-
-    Raises:
-        HTTPException: If parsing fails or input is invalid
-    """
-    try:
-        # Use the JSON-focused function to ensure proper JSON output
-        result = await parse_resume_json(request.resume_text)
-
-        # Check if there was an error in the result
-        if isinstance(result, dict) and "error" in result:
-            raise HTTPException(
-                status_code=500,
-                detail={"success": False, "error": result["error"]},
-            )
-
-        return ResumeResponse(
-            success=True, data=result, message="Resume parsed successfully"
-        )
-
-    except ValueError as e:
-        raise HTTPException(
-            status_code=400,
-            detail={"success": False, "error": f"Invalid input: {str(e)}"},
-        )
-    except HTTPException:
-        raise  # Re-raise HTTP exceptions
-    except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail={"success": False, "error": "Failed to parse resume"},
-        )
-
-
-@app.post(
-    "/analyze-job-posting",
-    response_model=JobPostingResponse,
-    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
-)
-async def analyze_job_posting_endpoint(request: JobPostingRequest):
-    """
-    Analyze a job posting from raw text and return structured data.
-
-    Args:
-        request: JobPostingRequest containing the job posting text
-
-    Returns:
-        JobPostingResponse with analyzed job posting data
-
-    Raises:
-        HTTPException: If analysis fails or input is invalid
-    """
-    try:
-        # Use the JSON-focused function to ensure proper JSON output
-        result = await analyze_job_posting_json(request.job_posting_text)
-
-        # Check if there was an error in the result
-        if isinstance(result, dict) and "error" in result:
-            raise HTTPException(
-                status_code=500,
-                detail={"success": False, "error": result["error"]},
-            )
-
-        return JobPostingResponse(
-            success=True, data=result, message="Job posting analyzed successfully"
-        )
-
-    except ValueError as e:
-        raise HTTPException(
-            status_code=400,
-            detail={"success": False, "error": f"Invalid input: {str(e)}"},
-        )
-    except HTTPException:
-        raise  # Re-raise HTTP exceptions
-    except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail={"success": False, "error": "Failed to analyze job posting"},
-        )
-
-
-@app.post(
-    "/process-document",
-    response_model=DocumentResponse,
-    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
-)
-async def process_document_endpoint(request: DocumentRequest):
-    """
-    Process a document (resume or job posting) with auto-detection or explicit type.
-
-    Args:
-        request: DocumentRequest containing the document text and optional type
-
-    Returns:
-        DocumentResponse with processed document data
-
-    Raises:
-        HTTPException: If processing fails or input is invalid
-    """
-    try:
-        # Use the unified document processing function
-        result = await process_document_json(
-            request.document_text, request.document_type
-        )
-
-        # Check if there was an error in the result
-        if isinstance(result, dict) and "error" in result:
-            raise HTTPException(
-                status_code=500,
-                detail={"success": False, "error": result["error"]},
-            )
-
-        return DocumentResponse(
-            success=result.get("success", True),
-            document_type=result.get("document_type", "unknown"),
-            data=result.get("data", {}),
-            detection_confidence=result.get("detection_confidence"),
-            message="Document processed successfully",
-        )
-
-    except ValueError as e:
-        raise HTTPException(
-            status_code=400,
-            detail={"success": False, "error": f"Invalid input: {str(e)}"},
-        )
-    except HTTPException:
-        raise  # Re-raise HTTP exceptions
-    except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail={"success": False, "error": "Failed to process document"},
-        )
 
 
 @app.post("/publish-event")
@@ -393,22 +247,23 @@ async def generate_score_endpoint(request: MatcherRequest):
         )
 
 
-async def main():
-    """Main entry point for CLI usage."""
-    if len(sys.argv) != 2:
-        print("Usage: python -m co_agent_recruitment <resume_text_file>")
-        sys.exit(1)
+# async def main():
+#     """Main entry point for CLI usage."""
+#     if len(sys.argv) != 2:
+#         print("Usage: python -m co_agent_recruitment <resume_text_file>")
+#         sys.exit(1)
 
-    try:
-        with open(sys.argv[1], "r", encoding="utf-8") as f:
-            resume_text = f.read()
+#     try:
+#         with open(sys.argv[1], "r", encoding="utf-8") as f:
+#             resume_text = f.read()
 
-        result = await parse_resume(resume_text)
-        print(result)
-    except Exception as e:
-        print(f"Error processing resume: {e}")
-        sys.exit(1)
+#         result = await parse_resume(resume_text)
+#         print(result)
+#     except Exception as e:
+#         print(f"Error processing resume: {e}")
+#         sys.exit(1)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Use the PORT environment variable provided by Cloud Run, defaulting to 8080
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
