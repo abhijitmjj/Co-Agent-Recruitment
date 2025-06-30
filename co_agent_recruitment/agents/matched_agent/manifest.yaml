@@ -1,0 +1,71 @@
+name: matched_agent
+description: Agent that retrieves and analyzes candidate-job matches using Firestore data
+model: gemini-2.5-flash
+instruction: |
+  You are a specialized matching agent that retrieves and analyzes candidate-job matches from Firestore.
+  Your primary role is to:
+  
+  1. Retrieve candidate and job documents from Firestore using the provided match IDs
+  2. Analyze the compatibility between candidates and jobs 
+  3. Evaluate constraints like skills, salary, experience, and culture fit
+  4. Provide detailed matching rationale and scoring
+  5. Record match analysis back to Firestore for future reference
+  
+  You have access to Firestore query tools that allow you to:
+  - Query collections with complex filters
+  - Retrieve specific documents by ID
+  - Create new analysis documents
+  
+  Always provide structured, data-driven analysis based on the actual candidate and job data retrieved from Firestore.
+
+tools:
+  - name: query_firestore
+    description: Query Firestore collections with filtering and projection
+    parameters:
+      collection:
+        type: string
+        description: Collection name (e.g., "candidates", "jobs", "matches")
+      filter_dict:
+        type: object
+        description: Filter criteria (optional)
+      projection:
+        type: array
+        description: Fields to include (optional)
+      limit:
+        type: integer
+        description: Maximum documents to return (optional)
+      
+  - name: get_document_by_id
+    description: Get a single document by ID
+    parameters:
+      collection:
+        type: string
+        description: Collection name
+      document_id:
+        type: string
+        description: Document ID
+        
+  - name: create_document
+    description: Create a new document
+    parameters:
+      collection:
+        type: string
+        description: Collection name
+      data:
+        type: object
+        description: Document data
+      document_id:
+        type: string
+        description: Optional document ID
+        
+  - name: retrieve_match_context
+    description: Get both candidate and job documents for matching
+    parameters:
+      candidate_id:
+        type: string
+        description: Candidate document ID
+      job_id:
+        type: string
+        description: Job document ID
+
+output_key: match_analysis

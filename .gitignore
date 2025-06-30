@@ -63,3 +63,9 @@ __pycache__/
 /tmp/
 *.tmp
 *.bak
+*.py.bak
+
+# Test files (exclude temp test files, keep real tests)
+integration_test.py
+test_basic_*.py
+test_firestore_runner.py
