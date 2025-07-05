@@ -1,0 +1,88 @@
+```mermaid
+graph TB
+    subgraph "Frontend / UI Layer"
+        UI[Recruiter UI<br/>Next.js App]
+        API[REST API<br/>FastAPI/Express]
+    end
+
+    subgraph "Orchestration Layer"
+        ORCH[Orchestrator Agent<br/>ADK Framework]
+        RUNNER[OrchestratorAgentRunner<br/>Session Management]
+        SESS[InMemorySessionService<br/>Session Persistence]
+    end
+
+    subgraph "Core Agents"
+        RESUME[Resume Parser Agent<br/>Pydantic + Gemini]
+        JOB[Job Posting Agent<br/>Pydantic + Gemini]
+        MATCH[Matcher Agent<br/>Compatibility Scoring]
+    end
+
+    subgraph "Communication Layer"
+        PUBSUB[Google Cloud Pub/Sub<br/>Event Bus]
+        EVENTS[Event Types:<br/>• ParseResumeEvent<br/>• ParseJobPostingEvent<br/>• CompatibilityScoreEvent]
+    end
+
+    subgraph "External Services"
+        VERTEX[Google Vertex AI<br/>Gemini Models]
+        FIRESTORE[Google Firestore<br/>Data Storage]
+        FIREBASE[Firebase Auth<br/>User Management]
+        GCFUNC[Google Cloud Functions<br/>Firestore Saver]
+    end
+
+    subgraph "Agentic Tools"
+        EMIT[emit_event<br/>Pub/Sub Publisher]
+        RECV[receive_events<br/>Pub/Sub Consumer]
+        PARSE[parse_dirty_json<br/>JSON Parser]
+        SAVE[save_to_firestore<br/>Data Persistence]
+    end
+
+    %% Frontend connections
+    UI --> API
+    API --> RUNNER
+
+    %% Orchestration connections
+    RUNNER --> ORCH
+    ORCH --> SESS
+    ORCH --> RESUME
+    ORCH --> JOB
+    ORCH --> MATCH
+
+    %% Agent connections
+    RESUME --> VERTEX
+    JOB --> VERTEX
+    MATCH --> VERTEX
+
+    %% Event publishing
+    RUNNER --> EMIT
+    EMIT --> PUBSUB
+    PUBSUB --> EVENTS
+
+    %% Data flow
+    PUBSUB --> GCFUNC
+    GCFUNC --> FIRESTORE
+
+    %% Tool usage
+    RESUME --> PARSE
+    JOB --> PARSE
+    MATCH --> PARSE
+    GCFUNC --> SAVE
+
+    %% External services
+    UI --> FIREBASE
+    FIRESTORE --> VERTEX
+
+    %% Styling
+    classDef frontend fill:#e1f5fe
+    classDef orchestration fill:#f3e5f5
+    classDef agents fill:#e8f5e8
+    classDef communication fill:#fff3e0
+    classDef external fill:#fce4ec
+    classDef tools fill:#f1f8e9
+
+    class UI,API frontend
+    class ORCH,RUNNER,SESS orchestration
+    class RESUME,JOB,MATCH agents
+    class PUBSUB,EVENTS communication
+    class VERTEX,FIRESTORE,FIREBASE,GCFUNC external
+    class EMIT,RECV,PARSE,SAVE tools
+```
