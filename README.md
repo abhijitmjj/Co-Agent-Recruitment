@@ -173,6 +173,25 @@ graph TB
     class EMIT,RECV,PARSE,SAVE tools
 ```
 
+## System Architecture Overview
+
+The Co-Agent Recruitment platform is a multi-component system designed to automate recruitment workflows. Key components include:
+
+* **Frontend:** A Next.js application providing the user interface for recruiters and candidates.
+* **Backend (Next.js):** API routes within the Next.js application that act as a Backend-for-Frontend (BFF), handling client requests and communicating with the Python agent backend.
+* **Agent Backend (Python/FastAPI):** A Python application using FastAPI to expose AI agents built with the Google Agent Development Kit (ADK). This includes an Orchestrator agent and specialized sub-agents (Resume Parser, Job Posting Parser, Matcher).
+* **Google Cloud Pub/Sub:** A messaging service used for event-driven communication, primarily to decouple agent processing from data persistence.
+* **Google Cloud Firestore:** A NoSQL database used for storing application data (parsed resumes, job postings, compatibility scores) and agent session state.
+* **Cloud Functions:** Serverless functions, such as the `firestore-saver`, triggered by Pub/Sub events to persist data into Firestore.
+
+![image](https://github.com/user-attachments/assets/a20431e0-420b-469b-8e56-87cd787f667c)
+
+Frontend: A Next.js application providing the user interface for recruiters and candidates.
+Backend (Next.js): API routes within the Next.js application that act as a Backend-for-Frontend (BFF), handling client requests and communicating with the Python agent backend.
+Agent Backend (Python/FastAPI): A Python application using FastAPI to expose AI agents built with the Google Agent Development Kit (ADK). This includes an Orchestrator agent and specialized sub-agents (Resume Parser, Job Posting Parser, Matcher).
+Google Cloud Pub/Sub: A messaging service used for event-driven communication, primarily to decouple agent processing from data persistence.
+Google Cloud Firestore: A NoSQL database used for storing application data (parsed resumes, job postings, compatibility scores) and agent session state.
+Cloud Functions: Serverless functions, such as the firestore-saver, triggered by Pub/Sub events to persist data into Firestore.
 
 ## Event Flow
 
