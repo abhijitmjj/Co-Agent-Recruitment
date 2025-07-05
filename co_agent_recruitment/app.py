@@ -5,19 +5,21 @@ This module provides both a FastAPI web interface and CLI interface for the resu
 
 import asyncio
 import sys
+import os
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from .agent import parse_resume
-from .json_agents import (
+from co_agent_recruitment.agent import parse_resume
+from co_agent_recruitment.json_agents import (
     parse_resume_json,
     analyze_job_posting_json,
     process_document_json,
 )
-from .matcher.json_matcher import generate_compatibility_score_json
-from .tools.pubsub import emit_event
-from .agent_engine import get_agent_runner
+from co_agent_recruitment.matcher.json_matcher import generate_compatibility_score_json
+from co_agent_recruitment.tools.pubsub import emit_event
+from co_agent_recruitment.agent_engine import get_agent_runner
+from co_agent_recruitment.utils import clean_text_to_ascii
 
 
 class ResumeRequest(BaseModel):
@@ -93,12 +95,14 @@ class ErrorResponse(BaseModel):
 
 class EventRequest(BaseModel):
     """Request model for publishing an event."""
+
     event_name: str = Field(..., description="The name of the event to publish")
     payload: Dict[str, Any] = Field(..., description="The event payload")
 
 
 class OrchestratorRequest(BaseModel):
     """Request model for the orchestrator agent."""
+
     query: str = Field(..., description="The query to send to the orchestrator agent")
     user_id: str = Field(..., description="The user ID for the session")
     session_id: Optional[str] = Field(None, description="The session ID to use")
@@ -106,6 +110,7 @@ class OrchestratorRequest(BaseModel):
 
 class MatcherRequest(BaseModel):
     """Request model for the matcher agent."""
+
     resume_data: Dict[str, Any] = Field(..., description="Structured resume data")
     job_posting_data: Dict[str, Any] = Field(
         ..., description="Structured job posting data"
@@ -114,6 +119,7 @@ class MatcherRequest(BaseModel):
 
 class MatcherResponse(BaseModel):
     """Response model for the matcher agent."""
+
     success: bool
     data: Dict[str, Any]
     message: str
@@ -128,13 +134,33 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+
+# CORS configuration
+allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS")
+allowed_origin_regex = os.getenv("CORS_ALLOWED_ORIGIN_REGEX")
+
+# Initialize with default values
+cors_args: Dict[str, Any] = {
+    "allow_credentials": True,
+    "allow_methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization"],
+}
+
+if allowed_origin_regex:
+    # Use regex if provided
+    cors_args["allow_origin_regex"] = allowed_origin_regex
+elif allowed_origins_str:
+    # Use the list of origins if provided
+    cors_args["allow_origins"] = allowed_origins_str.split(",")
+else:
+    # Fallback to a default for local development
+    cors_args["allow_origins"] = ["http://localhost:3000"]
+
+
 # Add CORS middleware
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    CORSMiddleware,  # type: ignore
+    **cors_args,
 )
 
 
@@ -321,7 +347,7 @@ async def orchestrator_endpoint(request: OrchestratorRequest):
         runner = get_agent_runner()
         response = await runner.run_async(
             user_id=request.user_id,
-            query=request.query,
+            query=clean_text_to_ascii(request.query or "") or "",
             session_id=request.session_id,
         )
         return {"success": True, "response": response}

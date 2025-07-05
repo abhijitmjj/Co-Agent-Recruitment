@@ -6,8 +6,10 @@ Co-Agent-Recruitment automates the end-to-end recruitment workflow by orchestrat
 
 Built on Google's Agent Development Kit (ADK), Google Genkit AI framework, and leveraging event-driven agent-to-agent communication, Co-Agent-Recruitment provides a scalable, modular architecture for streamlined and privacy-first hiring operations.
 
+
 ## Alpha Release
 [co-agent-recruitment-v0.5.0-alpha](https://github.com/abhijitmjj/Co-Agent-Recruitment/releases/tag/v0.5.0-alpha) 
+
 
 ## Motivation
 
@@ -526,9 +528,12 @@ The application is designed for deployment on Google Cloud Platform:
 4. **Authentication**: Configure Firebase Auth
 5. **AI Processing**: Leverage Vertex AI for Gemini models
 
-For detailed step-by-step deployment instructions, see the [**Cloud Run Deployment Guide**](docs/DEPLOYMENT.md).
 
-Altenate: if you don't want to have a fully customised endpoints, you can see Vertex Agent engine deployment [**Vertex Agent Engine**](docs/README_VERTEX_AI_DEPLOYMENT.md).
+For detailed step-by-step deployment instructions, see the [**Cloud Run Deployment Guide**](DEPLOYMENT.md).
+
+
+Altenate: if you don't want to have a fully customised endpoints, you can see Vertex Agent engine deployment [**Vertex Agent Engine**](README_VERTEX_AI_DEPLOYMENT.md).
+
 
 ### Environment Variables for Production
 Ensure all production environment variables are properly configured:

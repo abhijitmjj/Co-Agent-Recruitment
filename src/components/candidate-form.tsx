@@ -30,10 +30,11 @@ import {
   summarizeCandidateProfileAction,
   performMatchmakingAction,
   type Candidate,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type Job,
-  publishEventAction,
-  publishQueryAction
+  type MatchResult
 } from '@/lib/actions';
+import { publishQueryAction } from '@/lib/client-actions';
 import { Users, Sparkles, Briefcase, Loader2 } from 'lucide-react';
 import { useAppContext } from '@/contexts/app-context';
 import ResumeUploader from '@/components/resume-uploader';
@@ -43,14 +44,30 @@ export default function CandidateForm() {
   const { toast } = useToast();
   const { addCandidate, jobs } = useAppContext();
   const { data: session } = useSession();
+  
+  // Use a persistent session ID that stays the same for the user across submissions
+  const [sessionId] = useState(() => {
+    const userId = session?.user?.id;
+    if (userId) {
+      // Check if we have a stored session ID for this user
+      const storedSessionId = localStorage.getItem(`candidate_session_${userId}`);
+      if (storedSessionId) {
+        return storedSessionId;
+      }
+      // Create a new session ID and store it
+      const newSessionId = `candidate_session_${userId}_${Date.now()}`;
+      localStorage.setItem(`candidate_session_${userId}`, newSessionId);
+      return newSessionId;
+    }
+    // For anonymous users, create a session-based ID
+    return `anonymous_candidate_${uuidv4()}`;
+  });
 
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [submittedProfile, setSubmittedProfile] = useState<Candidate | null>(
     null
   );
-  const [potentialMatches, setPotentialMatches] = useState<
-    Awaited<ReturnType<typeof performMatchmakingAction>>
-  >([]);
+  const [potentialMatches, setPotentialMatches] = useState<MatchResult[]>([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -79,20 +96,29 @@ export default function CandidateForm() {
 
     const user_id = session?.user?.id || `cand_${Date.now()}`;
     const user_email = session?.user?.email || ''; // Get email from session
-    const session_id = uuidv4(); // Generate a unique session ID
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // const session_id = uuidv4(); // Generate a unique session ID
     const newCandidate: Candidate = { ...data, id: user_id, aiSummary: finalSummary, user_email };
     addCandidate(newCandidate);
     setSubmittedProfile(newCandidate);
     toast({ title: 'Profile Submitted', description: 'Your profile has been successfully submitted.' });
 
     setIsLoadingMatches(true);
-    const matches = await performMatchmakingAction(newCandidate, jobs);
-    setPotentialMatches(matches);
+    const matchesResult = await performMatchmakingAction(newCandidate, jobs);
+    setPotentialMatches(matchesResult.success ? matchesResult.data || [] : []);
     setIsLoadingMatches(false);
     setIsSubmitted(true);
+    
+    // Scroll to results section
+    setTimeout(() => {
+      const resultsElement = document.getElementById(`profile-${newCandidate.id}`);
+      if (resultsElement) {
+        resultsElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+    
     // Publish an event after successful submission
-    await publishQueryAction(data.experienceSummary, user_id, session_id);
-    // await publishEventAction("candidate_submitted", newCandidate);
+    await publishQueryAction(data.experienceSummary, sessionId);
   };
 
   const handleBackToForm = () => {
@@ -100,6 +126,18 @@ export default function CandidateForm() {
     setSubmittedProfile(null);
     setPotentialMatches([]);
     form.reset();
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleNewSession = () => {
+    // Clear the stored session and create a new one
+    const userId = session?.user?.id;
+    if (userId) {
+      localStorage.removeItem(`candidate_session_${userId}`);
+      const newSessionId = `candidate_session_${userId}_${Date.now()}`;
+      localStorage.setItem(`candidate_session_${userId}`, newSessionId);
+    }
+    handleBackToForm();
   };
 
   return (
@@ -236,6 +274,7 @@ export default function CandidateForm() {
           matches={potentialMatches}
           isLoading={isLoadingMatches}
           onBack={handleBackToForm}
+          sessionId={sessionId}
         />
       )}
     </div>
@@ -243,9 +282,10 @@ export default function CandidateForm() {
 }
 interface SubmissionResultProps {
   profile: Candidate | null;
-  matches: Awaited<ReturnType<typeof performMatchmakingAction>>;
+  matches: MatchResult[];
   isLoading: boolean;
   onBack: () => void;
+  sessionId: string;
 }
 
 function SubmissionResult({
@@ -253,6 +293,7 @@ function SubmissionResult({
   matches,
   isLoading,
   onBack,
+  sessionId,
 }: SubmissionResultProps) {
   if (!profile) {
     return null; // Or a loading/error state
@@ -260,10 +301,14 @@ function SubmissionResult({
 
   return (
     <section id={`profile-${profile.id}`} className="mt-12">
-      <h2 className="font-headline text-2xl font-bold tracking-tight text-primary-foreground mb-4 flex items-center">
-        <Briefcase className="mr-3 h-7 w-7 text-accent" /> Submission
-        Successful!
-      </h2>
+      <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+        <h2 className="font-headline text-2xl font-bold tracking-tight text-green-800 dark:text-green-200 mb-2 flex items-center">
+          <Briefcase className="mr-3 h-7 w-7 text-green-600 dark:text-green-400" /> Profile Submitted Successfully!
+        </h2>
+        <p className="text-green-700 dark:text-green-300">
+          Your profile has been processed and we&apos;ve found potential job matches for you.
+        </p>
+      </div>
       <Card className="shadow-lg bg-card/80 border-primary/30">
         <CardHeader>
           <CardTitle>Your Submitted Profile</CardTitle>
@@ -310,9 +355,22 @@ function SubmissionResult({
           ) : (
             <p>No job matches found at this time.</p>
           )}
-          <Button onClick={onBack} className="mt-4">
-            Submit Another
-          </Button>
+          <div className="flex gap-2 mt-4">
+            <Button onClick={onBack} variant="outline">
+              Submit Another Profile
+            </Button>
+            <Button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              variant="secondary"
+            >
+              Back to Top
+            </Button>
+          </div>
+          <div className="mt-2 text-center">
+            <p className="text-xs text-muted-foreground mb-2">
+              Session ID: {sessionId.slice(-8)}... (reused across submissions)
+            </p>
+          </div>
         </CardFooter>
       </Card>
     </section>

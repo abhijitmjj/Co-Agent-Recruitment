@@ -6,138 +6,252 @@ import { suggestJobTitles, type SuggestJobTitlesInput } from '@/ai/flows/suggest
 import { CandidateProfileSchema, JobDescriptionSchema, type CandidateProfileInput, type JobDescriptionInput } from './schemas';
 
 
-export async function getSuggestedJobTitlesAction(input: SuggestJobTitlesInput) {
+// Utility function for consistent error handling across actions
+const handleActionError = <T = unknown>(error: unknown, context: string): ActionResult<T> => {
+  const errorMessage = error instanceof Error ? error.message : `Unknown error in ${context}`;
+  console.error(`Error in ${context}:`, error);
+  return { success: false, error: errorMessage };
+};
+
+// Utility function for successful action results
+const createSuccessResult = <T>(data: T): ActionResult<T> => ({
+  success: true,
+  data,
+});
+
+export async function getSuggestedJobTitlesAction(input: SuggestJobTitlesInput): Promise<ActionResult<string[]>> {
   try {
     const result = await suggestJobTitles(input);
-    return { success: true, data: result.suggestedTitles };
+    return createSuccessResult(result.suggestedTitles);
   } catch (error) {
-    console.error("Error suggesting job titles:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to suggest job titles" };
+    return handleActionError(error, "getSuggestedJobTitlesAction");
   }
 }
 
-export async function summarizeCandidateProfileAction(input: SummarizeCandidateProfileInput) {
+export async function summarizeCandidateProfileAction(input: SummarizeCandidateProfileInput): Promise<ActionResult<string>> {
   try {
     const result = await summarizeCandidateProfile(input);
-    return { success: true, data: result.summary };
+    return createSuccessResult(result.summary);
   } catch (error) {
-    console.error("Error summarizing candidate profile:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to summarize profile" };
+    return handleActionError(error, "summarizeCandidateProfileAction");
   }
 }
 
-export async function generateSEOKeywordsAction(input: GenerateSEOKeywordsInput) {
+export async function generateSEOKeywordsAction(input: GenerateSEOKeywordsInput): Promise<ActionResult<string[]>> {
   try {
     const result = await generateSEOKeywords(input);
-    return { success: true, data: result.keywords };
+    return createSuccessResult(result.keywords);
   } catch (error) {
-    console.error("Error generating SEO keywords:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to generate SEO keywords" };
+    return handleActionError(error, "generateSEOKeywordsAction");
   }
 }
 
-// Placeholder types for shared state, ideally these would be more complex and stored in a DB
+// Enhanced types with better documentation and optional fields
 export interface Job extends JobDescriptionInput {
+  /** Unique identifier for the job posting */
   id: string;
-  companyName?: string; // Example additional field
+  /** Timestamp when the job was created */
+  createdAt?: Date;
+  /** Timestamp when the job was last updated */
+  updatedAt?: Date;
+  /** Whether the job posting is currently active */
+  isActive?: boolean;
 }
 
 export interface Candidate extends CandidateProfileInput {
+  /** Unique identifier for the candidate */
   id: string;
+  /** AI-generated summary of the candidate's profile */
   aiSummary?: string;
-  user_email?: string; // Example additional field
+  /** Email address of the user associated with this candidate profile */
+  user_email?: string;
+  /** Timestamp when the profile was created */
+  createdAt?: Date;
+  /** Timestamp when the profile was last updated */
+  updatedAt?: Date;
+  /** Whether the candidate profile is currently active */
+  isActive?: boolean;
 }
 
-// Type guards for robust validation
-export const isJob = (item: any): item is Job => JobDescriptionSchema.safeParse(item).success;
-export const isCandidate = (item: any): item is Candidate => CandidateProfileSchema.safeParse(item).success;
+// Utility types for better type safety
+export type MatchResult = {
+  id: string;
+  name: string;
+  relevance: number;
+  details: string;
+  type: 'job' | 'candidate';
+};
 
+export type ActionResult<T = unknown> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+};
 
-export async function publishEventAction(eventName: string, payload: any) {
-  try {
-    // Assuming the Python backend is running on localhost:8000
-    const response = await fetch('http://localhost:8000/publish-event', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ event_name: eventName, payload }),
-    });
-    console.log(`Publishing event ${eventName} with response:`, response);
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to publish event');
-    }
+// Constants for better maintainability
+export const MATCHMAKING_CONSTANTS = {
+  DEFAULT_MAX_RESULTS: 5,
+  MAX_ALLOWED_RESULTS: 100,
+  DEFAULT_TIMEOUT: 1000,
+  MAX_DETAILS_LENGTH: 97,
+} as const;
 
-    const result = await response.json();
-    console.log(`Publishing event ${eventName} with response:`, result);
-    return { success: true, data: result };
-  } catch (error) {
-    console.error(`Error publishing event ${eventName}:`, error);
-    return { success: false, error: error instanceof Error ? error.message : `Failed to publish event ${eventName}` };
+// Type guards for robust validation with enhanced error handling and logging
+export const isJob = (item: unknown): item is Job => {
+  if (!item || typeof item !== 'object') {
+    return false;
   }
-}
+  
+  const parseResult = JobDescriptionSchema.safeParse(item);
+  if (!parseResult.success) {
+    console.debug('Job validation failed:', parseResult.error.issues);
+  }
+  
+  return parseResult.success;
+};
+
+export const isCandidate = (item: unknown): item is Candidate => {
+  if (!item || typeof item !== 'object') {
+    return false;
+  }
+  
+  const parseResult = CandidateProfileSchema.safeParse(item);
+  if (!parseResult.success) {
+    console.debug('Candidate validation failed:', parseResult.error.issues);
+  }
+  
+  return parseResult.success;
+};
+
+// Enhanced type guard with detailed validation result
+export const validateJob = (item: unknown): { isValid: boolean; errors?: string[]; data?: Job } => {
+  if (!item || typeof item !== 'object') {
+    return { isValid: false, errors: ['Item must be a non-null object'] };
+  }
+  
+  const parseResult = JobDescriptionSchema.safeParse(item);
+  if (!parseResult.success) {
+    const errors = parseResult.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`);
+    return { isValid: false, errors };
+  }
+  
+  return { isValid: true, data: { ...parseResult.data, id: (item as Record<string, unknown>).id as string || '' } as Job };
+};
+
+export const validateCandidate = (item: unknown): { isValid: boolean; errors?: string[]; data?: Candidate } => {
+  if (!item || typeof item !== 'object') {
+    return { isValid: false, errors: ['Item must be a non-null object'] };
+  }
+  
+  const parseResult = CandidateProfileSchema.safeParse(item);
+  if (!parseResult.success) {
+    const errors = parseResult.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`);
+    return { isValid: false, errors };
+  }
+  
+  return {
+    isValid: true,
+    data: {
+      ...parseResult.data,
+      id: (item as Record<string, unknown>).id as string || '',
+      aiSummary: (item as Record<string, unknown>).aiSummary as string | undefined,
+      user_email: (item as Record<string, unknown>).user_email as string | undefined
+    } as Candidate
+  };
+};
 
 
-// This is a mock matchmaking function. In a real app, this would be a complex AI call.
+// Enhanced matchmaking function with better error handling and performance optimization
 export async function performMatchmakingAction(
   item: Job | Candidate,
   allItems: (Job | Candidate)[],
-  relevanceFn: (item: Job | Candidate, index: number) => number = () => Math.random()
-): Promise<{ id: string; name: string; relevance: number; details: string; type: 'job' | 'candidate' }[]> {
-  // Simulate AI matchmaking
-  await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+  options: {
+    relevanceFn?: (item: Job | Candidate, index: number) => number;
+    maxResults?: number;
+    timeout?: number;
+  } = {}
+): Promise<ActionResult<MatchResult[]>> {
+  const {
+    relevanceFn = () => Math.random(),
+    maxResults = MATCHMAKING_CONSTANTS.DEFAULT_MAX_RESULTS,
+    timeout = MATCHMAKING_CONSTANTS.DEFAULT_TIMEOUT
+  } = options;
 
-  if (isJob(item)) { // item is Job, find Candidates
-    return allItems
-      .filter(isCandidate)
-      .map((candidate, index) => ({
-        id: candidate.id,
-        name: candidate.fullName,
-        relevance: relevanceFn(candidate, index), // Mock relevance
-        details: candidate.aiSummary || candidate.experienceSummary.substring(0, 100) + '...',
-        type: 'candidate' as const,
-      }))
-      .sort((a, b) => b.relevance - a.relevance)
-      .slice(0, 5); // Return top 5 matches
-  } else { // item is Candidate, find Jobs
-    return allItems
-      .filter(isJob)
-      .map((job, index) => ({
-        id: job.id,
-        name: job.jobTitle,
-        relevance: relevanceFn(job, index), // Mock relevance
-        details: job.responsibilities.substring(0, 100) + '...',
-        type: 'job' as const,
-      }))
-      .sort((a, b) => b.relevance - a.relevance)
-      .slice(0, 5); // Return top 5 matches
-  }
-}
-
-export async function publishQueryAction(query: string, userId: string, sessionId?: string) {
   try {
-    const response = await fetch('http://localhost:8000/orchestrator', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query,
-        user_id: userId,
-        session_id: sessionId,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to publish query');
+    // Input validation
+    if (!item || !Array.isArray(allItems)) {
+      return { success: false, error: 'Invalid input parameters' };
     }
 
-    const result = await response.json();
-    return { success: true, data: result };
+    if (maxResults <= 0 || maxResults > MATCHMAKING_CONSTANTS.MAX_ALLOWED_RESULTS) {
+      return { success: false, error: `maxResults must be between 1 and ${MATCHMAKING_CONSTANTS.MAX_ALLOWED_RESULTS}` };
+    }
+
+    // Simulate AI matchmaking with configurable timeout
+    await new Promise(resolve => setTimeout(resolve, timeout));
+
+    // Filter and validate items upfront for better performance
+    const validCandidates = allItems.filter(isCandidate);
+    const validJobs = allItems.filter(isJob);
+
+    if (isJob(item)) {
+      // item is Job, find matching Candidates
+      if (validCandidates.length === 0) {
+        return createSuccessResult([]);
+      }
+
+      const matches = validCandidates
+        .map((candidate, index) => {
+          const relevance = Math.max(0, Math.min(1, relevanceFn(candidate, index))); // Clamp between 0-1
+          const details = candidate.aiSummary ||
+                         (candidate.experienceSummary.length > 100
+                           ? candidate.experienceSummary.substring(0, MATCHMAKING_CONSTANTS.MAX_DETAILS_LENGTH) + '...'
+                           : candidate.experienceSummary);
+          
+          return {
+            id: candidate.id,
+            name: candidate.fullName,
+            relevance,
+            details,
+            type: 'candidate' as const,
+          };
+        })
+        .sort((a, b) => b.relevance - a.relevance)
+        .slice(0, maxResults);
+
+      return createSuccessResult(matches);
+    } else if (isCandidate(item)) {
+      // item is Candidate, find matching Jobs
+      if (validJobs.length === 0) {
+        return createSuccessResult([]);
+      }
+
+      const matches = validJobs
+        .map((job, index) => {
+          const relevance = Math.max(0, Math.min(1, relevanceFn(job, index))); // Clamp between 0-1
+          const details = job.responsibilities.length > 100
+                         ? job.responsibilities.substring(0, MATCHMAKING_CONSTANTS.MAX_DETAILS_LENGTH) + '...'
+                         : job.responsibilities;
+          
+          return {
+            id: job.id,
+            name: job.jobTitle,
+            relevance,
+            details,
+            type: 'job' as const,
+          };
+        })
+        .sort((a, b) => b.relevance - a.relevance)
+        .slice(0, maxResults);
+
+      return createSuccessResult(matches);
+    } else {
+      return { success: false, error: 'Item must be either a Job or Candidate' };
+    }
   } catch (error) {
-    console.error(`Error publishing query:`, error);
-    return { success: false, error: error instanceof Error ? error.message : `Failed to publish query` };
+    return handleActionError(error, 'performMatchmakingAction');
   }
 }
+
+// Note: publishQueryAction and publishEventAction have been moved to server-actions.ts
+// to avoid bundling server-side dependencies in client code

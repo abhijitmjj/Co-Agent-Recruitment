@@ -27,6 +27,19 @@ dependencies = [
     "pydantic-ai-slim[a2a,vertexai]>=0.2.16",
     "pydantic>=2.0.0",
     "uvicorn",
+    "google-cloud-firestore>=2.11.0",
+    "pandas>=2.3.0",
+    "scikit-learn>=1.7.0",
+    "vertexai>=1.43.0",
+    "cleantext>=1.1.4",
+    "ftfy>=6.3.1",
+    "regex>=2024.11.6",
+    "lxml>=6.0.0",
+    "nltk>=3.9.1",
+    "docx2pdf>=0.1.8",
+    "spire-doc>=13.6.4",
+    "cloudpickle==3.0.0",
+    "wheel>=0.45.1",
 ]
 
 [build-system]
@@ -53,6 +66,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["co_agent_recruitment/tests"]
+asyncio_mode = "auto"
 
 [tool.pyrefly]
 # Remove the search-path and project-includes. Pyrefly will

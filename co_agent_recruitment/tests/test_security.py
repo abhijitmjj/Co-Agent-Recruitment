@@ -1,14 +1,13 @@
 """Tests for secure agent functionality."""
 
 import pytest
-import asyncio
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch, AsyncMock
 from co_agent_recruitment.agent import (
     sanitize_input,
     parse_resume,
     get_model_name,
 )
-from co_agent_recruitment.resume_parser.agent import PersonalDetails, Link
+from co_agent_recruitment.resume_parser.agent import PersonalDetails, Link, Resume
 
 
 class TestInputSanitization:
@@ -99,11 +98,11 @@ class TestConfiguration:
         """Test default model name."""
         with patch.dict("os.environ", {}, clear=True):
             model = get_model_name()
-            assert model == "gemini-2.5-flash-preview-05-20"
+            assert model == "gemini-2.5-flash"
 
     def test_get_model_name_from_env(self):
         """Test model name from environment."""
-        with patch.dict("os.environ", {"GEMINI_MODEL": "custom-model-name"}):
+        with patch.dict("os.environ", {"MODEL_ID": "custom-model-name"}):
             model = get_model_name()
             assert model == "custom-model-name"
 
@@ -114,35 +113,26 @@ class TestResumeParsingErrors:
     @pytest.mark.asyncio
     async def test_parse_resume_sanitizes_input(self):
         """Test that parse_resume sanitizes input."""
-        with patch("co_agent_recruitment.agent.PydanticAgent") as mock_agent_class:
-            # This is the mock for the PydanticAgent class.
-            # When PydanticAgent() is called, it will return mock_agent_instance.
-            mock_agent_instance = AsyncMock(name="PydanticAgent_instance_mock")
+        with patch(
+            "co_agent_recruitment.resume_parser.agent.PydanticAgent"
+        ) as mock_agent_class:
+            mock_agent_instance = AsyncMock()
             mock_agent_class.return_value = mock_agent_instance
 
-            # This is the synchronous object that `await agent.run(...)` should yield.
-            sync_run_result = MagicMock(name="run_result_sync_mock")
-            sync_run_result.output.model_dump.return_value = {"test": "data"}
-
-            # Explicitly set the 'run' attribute of mock_agent_instance to be an AsyncMock.
-            # This AsyncMock, when awaited, will return sync_run_result.
-            mock_agent_instance.run = AsyncMock(
-                return_value=sync_run_result, name="run_method_async_mock"
+            mock_run_result = AsyncMock()
+            mock_run_result.output = Resume(
+                personal_details=PersonalDetails(full_name="test")
             )
+            mock_agent_instance.run.return_value = mock_run_result
 
             malicious_resume = (
                 "John Doe <script>alert('xss')</script> Software Engineer"
             )
-            # Inside parse_resume:
-            # 1. agent = PydanticAgent(...) becomes agent = mock_agent_instance
-            # 2. result = await agent.run(...) becomes result = await mock_agent_instance.run(...)
-            #    Since mock_agent_instance.run is an AsyncMock returning sync_run_result,
-            #    `result` becomes `sync_run_result`.
-            # 3. return result.output.model_dump() becomes return sync_run_result.output.model_dump()
-            #    This is a synchronous call on a MagicMock, returning {"test": "data"}.
             parsed_output = await parse_resume(malicious_resume)
 
-            assert parsed_output == {"test": "data"}
+            assert (
+                parsed_output["resume_data"]["personal_details"]["full_name"] == "test"
+            )
 
             # Check that the agent's run method was called with sanitized input
             called_args = mock_agent_instance.run.call_args
@@ -150,16 +140,24 @@ class TestResumeParsingErrors:
             assert "<script>" not in sanitized_input_arg
             assert "alert" not in sanitized_input_arg
 
-        await asyncio.sleep(0)  # Allow event loop to process pending tasks
-
     @pytest.mark.asyncio
     async def test_parse_resume_handles_exceptions(self):
         """Test that parse_resume handles exceptions gracefully."""
-        with patch("co_agent_recruitment.agent.PydanticAgent") as mock_agent_class:
+        with patch(
+            "co_agent_recruitment.resume_parser.agent.PydanticAgent"
+        ) as mock_agent_class:
             mock_agent_class.side_effect = Exception("AI service error")
 
-            with pytest.raises(Exception, match="Failed to parse resume"):
-                await parse_resume("Valid resume text")
+            result = await parse_resume("Valid resume text")
+
+            # Should return fallback response instead of raising exception
+            assert result["operation_status"] == "error"
+            assert "Resume parsing failed" in result["error_message"]
+            assert (
+                result["resume_data"]["personal_details"]["full_name"]
+                == "Resume parsing failed"
+            )
+            assert "AI service error" in result["session_info"]["error"]
 
 
 if __name__ == "__main__":

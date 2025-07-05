@@ -86,9 +86,16 @@ env:
     availability:
       - RUNTIME
       - BUILD
-scripts:
-  buildCommand: bun run build
-  runCommand: bun run start
+# scripts:
+#   buildCommand: |
+#     curl -fsSL https://bun.sh/install | bash
+#     export BUN_INSTALL="$HOME/.bun"
+#     export PATH="$BUN_INSTALL/bin:$PATH"
+#     chmod +x $BUN_INSTALL/bin/bun
+#     bun install
+#     bun run build
+#   runCommand: npm run start
+  
   # Example of a non-secret environment variable:
   # - variable: NODE_ENV
   #   value: production # Or dynamically set based on your needs

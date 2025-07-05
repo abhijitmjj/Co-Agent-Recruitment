@@ -78,12 +78,16 @@ describe('Auth.js Callbacks', () => {
       
       if (!authOptions.callbacks?.session) throw new Error('Session callback not defined');
 
-      const result = await authOptions.callbacks.session({ session: mockSession, token: mockToken, user: mockAdapterUser } as any);
+      const result = await authOptions.callbacks.session({
+        session: mockSession,
+        token: mockToken,
+        user: mockAdapterUser
+      } as Parameters<NonNullable<typeof authOptions.callbacks.session>>[0]);
       
       expect(result.user).toBeDefined();
       if (result.user) {
-        expect((result.user as any).id).toBe('token-user-id');
-        expect((result.user as any).role).toBe('admin');
+        expect((result.user as { id: string; role: string }).id).toBe('token-user-id');
+        expect((result.user as { id: string; role: string }).role).toBe('admin');
       }
     });
   });

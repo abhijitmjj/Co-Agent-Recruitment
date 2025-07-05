@@ -2,9 +2,6 @@
   "name": "co-agent-recruitment",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "bun": ">=1.0"
-  },
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
     "dev:backend": "uvicorn co_agent_recruitment.app:app --reload",
@@ -77,6 +74,7 @@
     "firebase-admin": "^13.4.0",
     "firebase-tools": "^14.8.0",
     "genkit": "^1.13.0",
+    "google-auth-library": "^10.1.0",
     "jest": "^30.0.2",
     "lucide-react": "^0.522.0",
     "next": "^15.3.4",
@@ -115,11 +113,11 @@
     "happy-dom": "^18.0.1",
     "jest-environment-jsdom": "^30.0.2",
     "node-fetch": "^3.3.2",
+    "null-loader": "^4.0.1",
     "postcss": "^8",
     "tailwindcss": "3.4.3",
     "typescript": "^5",
     "undici": "^7.10.0",
-    "whatwg-fetch": "^3.6.20",
-    "null-loader": "^4.0.1"
+    "whatwg-fetch": "^3.6.20"
   }
 }

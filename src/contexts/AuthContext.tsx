@@ -7,6 +7,7 @@ import React,
     useState,
     ReactNode,
     useMemo,
+    useCallback,
   } from 'react';
 import {
   onAuthStateChanged,
@@ -33,7 +34,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const { auth } = getFirebase();
 
-  const signIn = async () => {
+  const signIn = useCallback(async () => {
     console.debug('[AuthContext] Firebase: requesting custom token');
     try {
       const res = await fetch('/api/auth/firebase');
@@ -48,7 +49,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (err) {
       console.error('[AuthContext] Firebase signIn error:', err);
     }
-  };
+  }, [auth]);
 
   const { data: nextSession, status: nextStatus } = useSession();
 
@@ -70,7 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value = useMemo<AuthContextValue>(
     () => ({ user, loading, signIn }),
-    [user, loading]
+    [user, loading, signIn]
   );
 
   return (
